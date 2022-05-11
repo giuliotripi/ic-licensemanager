@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Buy</title>
+	<!-- se qui metto la currency mi disabilita certe opzioni (sofort e mybank) -->
+	<script src="https://www.paypal.com/sdk/js?client-id=AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2nPIq0xHSvesGNH3Yy4mrQbXaCoZ&components=buttons&currency=EUR"></script>
+	<script>
+		paypal.Buttons({
+			style: {
+				layout: 'vertical',
+				color:  'blue',
+				shape:  'rect',
+				label:  'paypal'
+			},
+			createOrder: function(data, actions) {
+				// Set up the transaction
+				//https://developer.paypal.com/docs/api/orders/v2/#definition-purchase_unit_request
+				return actions.order.create({
+					purchase_units: [{
+						amount: {
+							value: '5.00',
+							currency_code: "EUR"
+						},
+						description: "Licenza office",
+						custom_id: "customId", //Appears in transaction and settlement reports but is not visible to the payer.
+						reference_id: "ciaoneee",
+						invoice_id: "invoice" + Math.floor(Math.random() * 100000000000000000000000000)
+					}]
+				});
+			},
+			onApprove: function(data, actions) {
+				// This function captures the funds from the transaction.
+				return actions.order.capture().then(function(details) {
+					// This function shows a transaction success message to your buyer.
+					alert('Transaction completed by ' + details.payer.name.given_name);
+					console.log(details);
+				});
+			}
+		}).render('#paypal-button-container');
+	</script>
+</head>
+<body>
+	<div id="paypal-button-container"></div>
+</body>
+</html>
