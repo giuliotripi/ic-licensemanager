@@ -6,7 +6,7 @@ type Licenza = record {
 service : {
     "greet": (text) -> (text) query;
     "confirm_purchase": (text) -> (text);
-    "list_products": (text) -> (text) query;
+    "list_products": () -> (vec Licenza) query;
     "update_product": (text) -> (text);
     "update": (Licenza) -> (text);
     "get": (text) -> (Licenza);

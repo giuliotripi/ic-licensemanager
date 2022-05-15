@@ -1,4 +1,3 @@
-// use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::convert::TryFrom;
@@ -17,8 +16,9 @@ use ic_cdk::api::call::ManualReply;
 
 mod lib_nft;
 
+//String, id account che esegue l'operazione
 type IdStore = BTreeMap<String, Principal>;
-type LicenseStore = BTreeMap<Principal, License>;
+type LicenseStore = BTreeMap<String, License>;
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 struct License {
@@ -34,14 +34,15 @@ thread_local! {
 
 #[query(name = "getSelf")]
 fn get_self() -> License {
-    let id = ic_cdk::api::caller();
-    LICENSE_STORE.with(|license_store| {
-        license_store
-            .borrow()
-            .get(&id)
-            .cloned()
-            .unwrap_or_else(|| License::default())
-    })
+    // let id = ic_cdk::api::caller();
+    // LICENSE_STORE.with(|license_store| {
+    //     license_store
+    //         .borrow()
+    //         .get(&id)
+    //         .cloned()
+    //         .unwrap_or_else(|| License::default())
+    // })
+    return License::default()
 }
 
 #[query]
@@ -60,27 +61,33 @@ fn get_single(text: String) -> License {
 
 #[query]
 fn get(name: String) -> License {
-    ID_STORE.with(|id_store| {
-        LICENSE_STORE.with(|license_store| {
-            id_store
-                .borrow()
-                .get(&name)
-                .and_then(|id| license_store.borrow().get(id).cloned())
-                .unwrap_or_else(|| License::default())
-        })
+    LICENSE_STORE.with(|license_store| {
+        license_store
+            .borrow()
+            .get(&name)
+            .cloned()
+            .unwrap_or_else(|| License::default())
     })
 }
 
 #[update]
-fn update(profile: License) -> String {
+fn update(license: License) -> String {
     let principal_id = ic_cdk::api::caller();
+    let license_id = license.clone().id.clone();
+    let id_previous_owner = ID_STORE.with(|id_store| {
+        // id_store.borrow().contains_key(license_id.clone().as_ref())
+        id_store.borrow().get(&license_id).cloned()
+    });
+    if id_previous_owner.is_some() && id_previous_owner.unwrap().to_text().eq(&principal_id.to_text()){
+        return String::from("Non puoi caricare un ID già preso da un altro account")
+    }
     ID_STORE.with(|id_store| {
         id_store
             .borrow_mut()
-            .insert(profile.id.clone(), principal_id);
+            .insert(license_id.clone(), principal_id);
     });
-    LICENSE_STORE.with(|profile_store| {
-        profile_store.borrow_mut().insert(principal_id, profile);
+    LICENSE_STORE.with(|license_store| {
+        license_store.borrow_mut().insert(license_id.clone(), license.clone());
     });
     principal_id.to_text()
 }
@@ -91,8 +98,14 @@ fn greet(name: String) -> String {
 }
 
 #[ic_cdk_macros::query]
-fn list_products(name: String) -> String {
-    format!("Hello {}!", name)
+fn list_products() -> Vec<License> {
+    let mut licenze : Vec<License> = Vec::new();
+    LICENSE_STORE.with(|license_store| {
+        for (_, lic) in license_store.borrow().iter() {
+            licenze.push(lic.clone())
+        }
+        return licenze.clone();
+    })
 }
 
 #[ic_cdk_macros::update]

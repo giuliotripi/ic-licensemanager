@@ -17,9 +17,9 @@ A version of this example with a Motoko implementation of canister `hello` can b
 
 ## Interface
 
-Canister `hello` is defined as a Rust library:
+Canister `licenseManager` is defined as a Rust library:
 
-* [src/hello/lib.rs](src/hello/lib.rs)
+* [src/licenseManager/lib.rs](src/licenseManager/lib.rs)
 
 with the Candid interface:
 
@@ -33,8 +33,8 @@ The frontend displays a page with an HTML text box for the argument and a button
 
 The relevant frontend code is:
 
-* [src/hello_assets/src/index.html](src/hello_assets/src/index.html)
-* [src/hello_assets/src/index.jsx](src/hello_assets/src/index.jsx)
+* [src/licenseManager_assets/src/index.html](src/licenseManager_assets/src/index.html)
+* [src/licenseManager_assets/src/index.jsx](src/licenseManager_assets/src/index.jsx)
 
 
 ## Requirements
