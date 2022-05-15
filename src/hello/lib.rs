@@ -15,6 +15,8 @@ use ic_cdk::{
 use serde::Deserialize;
 use ic_cdk::api::call::ManualReply;
 
+mod lib_nft;
+
 type IdStore = BTreeMap<String, Principal>;
 type LicenseStore = BTreeMap<Principal, License>;
 
