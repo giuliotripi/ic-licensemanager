@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use ed25519_dalek::{PublicKey, Verifier, Signature, SignatureError};
+use ed25519_dalek::{PublicKey, Signature, SignatureError, Verifier};
 // use ic_cdk::export::Principal;
 use ic_cdk_macros::*;
 
@@ -12,9 +12,9 @@ use ic_cdk::{
     },
 };
 use serde::Deserialize;
-use ic_cdk::api::call::ManualReply;
 
 mod lib_nft;
+mod http;
 
 //String, id account che esegue l'operazione
 type IdStore = BTreeMap<String, Principal>;

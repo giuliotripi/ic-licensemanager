@@ -1,10 +1,6 @@
 #![allow(clippy::collapsible_else_if)]
 
-#[macro_use]
-extern crate ic_cdk_macros;
-#[macro_use]
-extern crate serde;
-
+use ic_cdk_macros::*;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -14,7 +10,7 @@ use std::mem;
 use std::num::TryFromIntError;
 use std::result::Result as StdResult;
 
-use candid::{CandidType, Encode, Principal};
+use candid::{CandidType, Encode, Principal, Deserialize};
 use ic_cdk::{
     api::{self, call},
     export::candid,
@@ -22,13 +18,12 @@ use ic_cdk::{
 };
 use ic_certified_map::Hash;
 use include_base64::include_base64;
-
-mod http;
+use crate::http;
 
 const MGMT: Principal = Principal::from_slice(&[]);
 
 thread_local! {
-    static STATE: RefCell<State> = RefCell::default();
+    pub static STATE: RefCell<State> = RefCell::default();
 }
 
 #[derive(CandidType, Deserialize)]
@@ -47,6 +42,10 @@ fn pre_upgrade() {
 }
 #[post_upgrade]
 fn post_upgrade() {
+    // let restore : Result<StableState, String> = storage::stable_restore();
+    // if ! restore.is_ok() {
+    //     return;
+    // }
     let (StableState { state, hashes },) = storage::stable_restore().unwrap();
     STATE.with(|state0| *state0.borrow_mut() = state);
     let hashes = hashes.into_iter().collect();
@@ -256,13 +255,13 @@ fn transfer_from_notify(from: Principal, to: Principal, token_id: u64, data: Vec
     let res = transfer_from(from, to, token_id)?;
     if let Ok(arg) = Encode!(&api::caller(), &from, &token_id, &data) {
         // Using call_raw ensures we don't need to await the future for the call to be executed.
-        // Calling an arbitrary function like this means that a malicious recipient could call 
+        // Calling an arbitrary function like this means that a malicious recipient could call
         // transferFromNotifyDip721 in their onDIP721Received function, resulting in an infinite loop.
         // This will trap eventually, but the transfer will have already been completed and the state-change persisted.
         // That means the original transfer must reply before that happens, or the caller will be
         // convinced that the transfer failed when it actually succeeded. So we don't await the call,
         // so that we'll reply immediately regardless of how long the notification call takes.
-        let _ = api::call::call_raw(to, "onDIP721Received", arg, 0);
+        let _ = api::call::call_raw(to, "onDIP721Received", &*arg, 0);
     }
     Ok(res)
 }
@@ -418,8 +417,8 @@ fn burn(token_id: u64) -> Result {
 }
 
 #[derive(CandidType, Deserialize, Default)]
-struct State {
-    nfts: Vec<Nft>,
+pub struct State {
+    pub(crate)  nfts: Vec<Nft>,
     custodians: HashSet<Principal>,
     operators: HashMap<Principal, HashSet<Principal>>, // owner to operators
     logo: Option<LogoResult>,
@@ -429,11 +428,11 @@ struct State {
 }
 
 #[derive(CandidType, Deserialize)]
-struct Nft {
+pub(crate) struct Nft {
     owner: Principal,
     approved: Option<Principal>,
     id: u64,
-    metadata: MetadataDesc,
+    pub(crate) metadata: MetadataDesc,
     content: Vec<u8>,
 }
 
@@ -441,14 +440,14 @@ type MetadataDesc = Vec<MetadataPart>;
 type MetadataDescRef<'a> = &'a [MetadataPart];
 
 #[derive(CandidType, Deserialize)]
-struct MetadataPart {
-    purpose: MetadataPurpose,
-    key_val_data: HashMap<String, MetadataVal>,
-    data: Vec<u8>,
+pub(crate) struct MetadataPart {
+    pub(crate) purpose: MetadataPurpose,
+    pub(crate) key_val_data: HashMap<String, MetadataVal>,
+    pub(crate) data: Vec<u8>,
 }
 
 #[derive(CandidType, Deserialize, PartialEq)]
-enum MetadataPurpose {
+pub(crate) enum MetadataPurpose {
     Preview,
     Rendered,
 }
@@ -461,7 +460,7 @@ struct MintResult {
 
 #[allow(clippy::enum_variant_names)]
 #[derive(CandidType, Deserialize)]
-enum MetadataVal {
+pub(crate) enum MetadataVal {
     TextContent(String),
     BlobContent(Vec<u8>),
     NatContent(u128),
