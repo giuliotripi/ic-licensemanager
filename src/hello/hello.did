@@ -1,3 +1,16 @@
+type Licenza = record {
+    id: text;
+    price: nat64;
+};
+
 service : {
     "greet": (text) -> (text) query;
+    "confirm_purchase": (text) -> (text);
+    "list_products": (text) -> (text) query;
+    "update_product": (text) -> (text);
+    "update": (Licenza) -> (text);
+    "get": (text) -> (Licenza);
+    "get_single": (text) -> (Licenza);
+    "add_product": (text) -> (text);
+    "delete_product": (text) -> (text);
 }

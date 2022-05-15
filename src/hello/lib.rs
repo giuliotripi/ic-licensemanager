@@ -1,9 +1,115 @@
+// use std::borrow::Borrow;
+use std::collections::BTreeMap;
+use std::cell::RefCell;
 use std::convert::TryFrom;
 use ed25519_dalek::{PublicKey, Verifier, Signature, SignatureError};
+// use ic_cdk::export::Principal;
+use ic_cdk_macros::*;
 
+use ic_cdk::{
+    export::{
+        candid::CandidType,
+        Principal,
+    },
+};
+use serde::Deserialize;
+use ic_cdk::api::call::ManualReply;
+
+type IdStore = BTreeMap<String, Principal>;
+type LicenseStore = BTreeMap<Principal, License>;
+
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+struct License {
+    pub id: String,
+    pub price: u64,
+    // pub keywords: Vec<String>,
+}
+
+thread_local! {
+    static LICENSE_STORE: RefCell<LicenseStore> = RefCell::default();
+    static ID_STORE: RefCell<IdStore> = RefCell::default();
+}
+
+#[query(name = "getSelf")]
+fn get_self() -> License {
+    let id = ic_cdk::api::caller();
+    LICENSE_STORE.with(|license_store| {
+        license_store
+            .borrow()
+            .get(&id)
+            .cloned()
+            .unwrap_or_else(|| License::default())
+    })
+}
+
+#[query]
+fn get_single(text: String) -> License {
+    let text = text.to_lowercase();
+    LICENSE_STORE.with(|license_store| {
+        for (_, lic) in license_store.borrow().iter() {
+            if lic.id.to_lowercase().eq(&text)
+            {
+                return lic.clone();
+            }
+        }
+        return License::default();
+    })
+}
+
+#[query]
+fn get(name: String) -> License {
+    ID_STORE.with(|id_store| {
+        LICENSE_STORE.with(|license_store| {
+            id_store
+                .borrow()
+                .get(&name)
+                .and_then(|id| license_store.borrow().get(id).cloned())
+                .unwrap_or_else(|| License::default())
+        })
+    })
+}
+
+#[update]
+fn update(profile: License) -> String {
+    let principal_id = ic_cdk::api::caller();
+    ID_STORE.with(|id_store| {
+        id_store
+            .borrow_mut()
+            .insert(profile.id.clone(), principal_id);
+    });
+    LICENSE_STORE.with(|profile_store| {
+        profile_store.borrow_mut().insert(principal_id, profile);
+    });
+    principal_id.to_text()
+}
 
 #[ic_cdk_macros::query]
-fn greet(signature: String) -> String {
+fn greet(name: String) -> String {
+    format!("Hello {}!", name)
+}
+
+#[ic_cdk_macros::query]
+fn list_products(name: String) -> String {
+    format!("Hello {}!", name)
+}
+
+#[ic_cdk_macros::update]
+fn update_product(name: String) -> String {
+    format!("Hello {}!", name)
+}
+
+#[ic_cdk_macros::update]
+fn add_product(name: String) -> String {
+    format!("Hello {}!", name)
+}
+
+#[ic_cdk_macros::update]
+fn delete_product(name: String) -> String {
+    format!("Hello {}!", name)
+}
+
+#[ic_cdk_macros::update]
+fn confirm_purchase(signature: String) -> String {
     let result = match verify_signature(signature.clone()) {
         Ok(ris) => {ris}
         Err(_) => {false}
