@@ -1,24 +1,24 @@
 {
   "canisters": {
-    "hello": {
+    "licenseManager": {
       "build": [
-        "cargo build --target wasm32-unknown-unknown --package hello --release"
+        "cargo build --target wasm32-unknown-unknown --package licenseManager --release"
       ],
-      "wasm": "target/wasm32-unknown-unknown/release/hello.wasm",
+      "wasm": "target/wasm32-unknown-unknown/release/licenseManager.wasm",
       "type": "custom",
-      "candid": "src/hello/hello.did",
-      "package": "hello"
+      "candid": "src/licenseManager/licenseManager.did",
+      "package": "licenseManager"
     },
-    "hello_assets": {
+    "licenseManager_assets": {
       "dependencies": [
-        "hello"
+        "licenseManager"
       ],
       "frontend": {
-        "entrypoint": "src/hello_assets/src/index.html"
+        "entrypoint": "src/licenseManager_assets/src/index.html"
       },
       "source": [
-        "src/hello_assets/assets",
-        "dist/hello_assets/"
+        "src/licenseManager_assets/assets",
+        "dist/licenseManager_assets/"
       ],
       "type": "assets"
     }
