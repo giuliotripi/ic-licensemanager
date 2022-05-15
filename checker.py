@@ -3,7 +3,7 @@ from aiohttp import web
 from ic.client import Client
 from ic.identity import Identity
 from ic.agent import Agent
-from ic.candid import Types, encode, decode
+from ic.candid import Types, encode
 
 
 async def handle(request):
@@ -13,8 +13,25 @@ async def handle(request):
 
 
 async def handlePaypal(request):
-	name = request.rel_url.query["name"]
-	return web.Response(text="ok " + name)
+	# id = request.rel_url.query["id"]
+	# reference_id = request.rel_url.query["reference_id"]
+	# amount = request.rel_url.query["amount"]
+	# custom_id = request.rel_url.query["custom_id"]
+	# email = request.rel_url.query["email"]
+	# payer_id = request.rel_url.query["payer_id"]
+	params = {}
+	attributi = ["id", "referenceId", "amount", "customId", "email", "payerId"]
+	for el in attributi:
+		params[el] = request.rel_url.query[el]
+	print(params)
+	async with aiohttp.ClientSession() as session:
+		async with session.get('https://toshiba.tripi.eu/checkPaypal.php', params=params) as resp:
+			print(await resp.text())
+			response = await resp.json()
+			if response["ok"]:
+				return web.Response(text="ok")
+			else:
+				return web.Response(text="fail")
 
 
 def send_ok_canister():
@@ -40,5 +57,5 @@ app.add_routes([web.get('/', handle),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
-	# web.run_app(app)
-	send_ok_canister()
+	web.run_app(app)
+	# send_ok_canister()
