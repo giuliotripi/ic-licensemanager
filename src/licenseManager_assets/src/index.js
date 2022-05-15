@@ -23,3 +23,11 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 
   return false;
 });
+document.querySelector("#refresh").addEventListener("click", async (e) => {
+  const elencoLicenze = await licenseManager.list_products();
+  let finalHtml = "";
+  elencoLicenze.forEach(licenza => finalHtml += "<li>" + licenza.id + " -> " + licenza.price + "€ </li>\n");
+
+  document.getElementById("elencoLicenze").innerHTML = finalHtml;
+  return false;
+});
