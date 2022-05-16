@@ -26,7 +26,7 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 document.querySelector("#refresh").addEventListener("click", async (e) => {
   const elencoLicenze = await licenseManager.list_products();
   let finalHtml = "";
-  elencoLicenze.forEach(licenza => finalHtml += "<li>" + licenza.id + " -> " + licenza.price + "€ </li>\n");
+  elencoLicenze.forEach(licenza => finalHtml += "<tr>" + licenza.id + " -> " + licenza.price + "€ </tr>\n");
 
   document.getElementById("elencoLicenze").innerHTML = finalHtml;
   return false;
