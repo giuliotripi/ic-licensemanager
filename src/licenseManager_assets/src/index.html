@@ -39,17 +39,28 @@
     </style>
 
     <title>License manager</title>
-<!--    <base href="/" />-->
+    <base href="/" />
     <link rel="icon" href="favicon.ico" />
     <link type="text/css" rel="stylesheet" href="main.css" />
   </head>
   <body>
     <main>
       <img src="logo.png" alt="DFINITY logo" />
-      <form action="#">
+      <form action="#" id="nameForm">
         <label for="name">Enter your name: &nbsp;</label>
         <input id="name" alt="Name" type="text" />
         <button type="submit">Click Me!</button>
+      </form>
+      <form action="#" id="updateForm">
+        <div>
+          <label for="licenseId">Enter license name: &nbsp;</label>
+          <input id="licenseId" placeholder="ID and name" type="text" />
+        </div>
+        <div>
+          <label for="licensePrice">Enter price: &nbsp;</label>
+          <input id="licensePrice" alt="price" type="number" step="0.01" />
+        </div>
+        <button type="submit">Aggiungi licenza!</button>
       </form>
 
       <div>
@@ -62,13 +73,25 @@
       </div>
 
       <div>
-      <input type="text" id="refresh" placeholder="Search for licenses...">
+      <input type="text" id="searchLicense" placeholder="Search for licenses..."> <button id="refresh">Refresh</button>
       <table id="elencoLicenze">
-        <tr class="header">
-          <th style="width:60%;">Name</th>
-          <th style="width:40%;">Price</th>
-        </tr>
+        <thead>
+          <tr class="header">
+            <th style="width:60%;">Name</th>
+            <th style="width:40%;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
       </table>
+        <form id="buyForm">
+          <label for="elencoLicenzeBuy">Seleziona la licenza che vuoi acquistare: </label>
+          <select id="elencoLicenzeBuy"></select>
+          <input type="submit" value="Acquista"/>
+        </form>
+
+        <div id="paypal-button-container"></div>
 
       </div>
       <div id="loader">
