@@ -92,7 +92,12 @@ document.querySelector("#buyForm").addEventListener("submit", async (e) => {
 
 function callExternalServer(id, email, payerId) {
   axios.get(baseUrl + "/check", {params: {id, referenceId, amount, customId, email, payerId}}).then(function (response) {
-
+    console.log(response.data);
+    if(response.data.ok) {
+      console.log("Transazione conclusa con successo");
+    } else {
+      alert("Transazione fallita: " + response.data.message);
+    }
   }).catch(function (response) {
 
   });
@@ -113,6 +118,10 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
           console.log("Setting up the transaction...");
           const selectLicenze = document.getElementById("elencoLicenzeBuy");
           const selectedElement = selectLicenze.options[selectLicenze.selectedIndex];
+          if(selectedElement === undefined) {
+            alert("Nessun elemento selezionato");
+            return;
+          }
           const description = selectedElement.getAttribute("data-description");
           referenceId = selectedElement.getAttribute("data-referenceId");
           amount = parseFloat(selectedElement.dataset.price);
@@ -126,7 +135,7 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
               },
               description: description,
               custom_id: customId, //Appears in transaction and settlement reports but is not visible to the payer.
-              reference_id: "License no. " + referenceId,
+              reference_id: referenceId,
               // invoice_id: "invoice" + Math.floor(Math.random() * 100000000000000000000000000)
             }]
           });
@@ -135,7 +144,7 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
           // This function captures the funds from the transaction.
           return actions.order.capture().then(function(details) {
             // This function shows a transaction success message to your buyer.
-            alert('Transaction completed by ' + details.payer.name.given_name);
+            console.log('Transaction completed by ' + details.payer.name.given_name);
             callExternalServer(details.id, details.payer.email_address, details.payer.payer_id);
             console.log(details);
           });

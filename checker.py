@@ -6,6 +6,8 @@ from ic.identity import Identity
 from ic.agent import Agent
 from ic.candid import Types, encode
 
+import firma
+
 
 async def handle(request):
 	name = request.match_info.get('name', "Anonymous")
@@ -30,19 +32,29 @@ async def handlePaypal(request):
 			print(await resp.text())
 			response = await resp.json()
 			if response["ok"]:
-				return web.Response(text="ok")
+				send_ok_canister(customId=params["customId"], referenceId=params["referenceId"], amount=params["amount"])
+				return web.json_response({"ok": True})
 			else:
-				return web.Response(text="fail")
+				return web.json_response({"ok": False})
 
 
-def send_ok_canister():
+def send_ok_canister(customId: str, referenceId: str, amount):
 	# Identity and Client are dependencies of Agent
 	iden = Identity()
 	client = Client(url="http://holochain.local:8000")
 	agent = Agent(iden, client)
-	name = agent.query_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "greet", encode([{"type": Types.Text, "value": "ciao"}]))
+
+	sign = firma.Signature()
+	data = customId + ";" + referenceId + ";" + amount
+	signature = sign.sign(data).decode("utf-8") + data.encode("utf-8").hex()
+
+	print(signature)
+
+	# name = agent.query_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([{"type": Types.Text, "value": "ciao"}]))
+	name = agent.update_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([{"type": Types.Text, "value": signature}]))
 	print(name)
 	print(name[0]["value"])
+	return name[0]["value"]
 
 
 async def check_my_server():
@@ -62,8 +74,6 @@ cors = aiohttp_cors.setup(app)
 # To enable CORS processing for specific route you need to add
 # that route to the CORS configuration object and specify its
 # CORS options.
-app.add_routes([web.get('/', handle),
-				web.get('/{name}', handle)])
 resource = cors.add(app.router.add_resource("/check"))
 route = cors.add(
 	resource.add_route("GET", handlePaypal), {
@@ -74,6 +84,9 @@ route = cors.add(
 			max_age=3600,
 		)
 	})
+
+app.add_routes([web.get('/', handle),
+				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
 	web.run_app(app)

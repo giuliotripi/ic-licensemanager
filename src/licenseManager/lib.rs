@@ -125,18 +125,18 @@ fn delete_product(name: String) -> String {
 
 #[ic_cdk_macros::update]
 fn confirm_purchase(signature: String) -> String {
-    let result = match verify_signature(signature.clone()) {
+    let orig_data = signature_to_orig_data(signature.clone());
+    let result = match verify_signature(signature.clone(), orig_data.clone()) {
         Ok(ris) => {ris}
         Err(_) => {false}
     };
-    let orig_data = signature_to_orig_data(signature.clone());
     format!("The verification result for \"{}\" containing \"{}\" is {}", signature, orig_data, result)
 }
 //https://docs.rs/ed25519-dalek/latest/ed25519_dalek/
 //https://docs.rs/ed25519/latest/ed25519/
 //https://github.com/RustCrypto/signatures/tree/master/ed25519
-fn verify_signature(signature_str: String) ->  Result<bool, SignatureError> {
-    let pub_key = [251, 249, 141, 122, 83, 239, 198, 212, 199, 142, 166, 51, 103, 189, 116, 150, 63, 232, 101, 116, 224, 60, 65, 10, 159, 22, 6, 18, 51, 172, 21, 247];
+fn verify_signature(signature_str: String, signed_text: String) ->  Result<bool, SignatureError> {
+    let pub_key = [9, 100, 165, 165, 48, 248, 113, 245, 88, 3, 54, 194, 65, 151, 60, 65, 247, 223, 186, 194, 77, 95, 190, 101, 70, 33, 94, 182, 111, 231, 45, 43];
     let public_key: PublicKey = PublicKey::from_bytes(&pub_key)?;
     // let signature_str = String::from("4f23d6692b340dbc92e163f5c271fe7d8f03e5836ec36eb474d8af6d2a22910de32a4284d6974302f6cfe9c716130cdc29dbeff8cb83171607516b700f28e30f41747461636b206174204461776e");
     let decoded_signature = signature_to_array(signature_str.clone());
@@ -145,7 +145,7 @@ fn verify_signature(signature_str: String) ->  Result<bool, SignatureError> {
         Err(_) => {return Err(Default::default());}
     };
     let signature = Signature::try_from(signature_or_error.as_ref())?;
-    let message: &[u8] = b"Attack at Dawn";
+    let message: &[u8] = signed_text.as_bytes();
     if public_key.verify(message, &signature).is_ok() {
         println!("verificato");
         Ok(true)
