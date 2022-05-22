@@ -10,7 +10,7 @@ img {
   margin: auto;
 }
 
-form {
+form, .centered {
   display: flex;
   justify-content: center;
   gap: 0.5em;
