@@ -1,5 +1,8 @@
 {
   "canisters": {
+    "dip721_nft_container": {
+      "main": "src/dip721_nft_container/Main.mo"
+    },
     "licenseManager": {
       "build": [
         "cargo build --target wasm32-unknown-unknown --package licenseManager --release"

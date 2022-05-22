@@ -13,9 +13,6 @@ use ic_cdk::{
 };
 use serde::Deserialize;
 
-mod lib_nft;
-mod http;
-
 //String, id account che esegue l'operazione
 type IdStore = BTreeMap<String, Principal>;
 type LicenseStore = BTreeMap<String, License>;
