@@ -86,6 +86,11 @@ fn update(license: License) -> String {
     LICENSE_STORE.with(|license_store| {
         license_store.borrow_mut().insert(license_id.clone(), license.clone());
     });
+    if principal_id.clone() == Principal::anonymous() {
+        let mut ret = String::from("Eri anonimo: ");
+        ret.push_str(principal_id.to_text().as_str());
+        return ret;
+    }
     principal_id.to_text()
 }
 
