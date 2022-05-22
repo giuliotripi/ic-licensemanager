@@ -32,6 +32,8 @@ document.querySelector("form#nameForm").addEventListener("submit", async (e) => 
 
   return false;
 });
+
+//aggiunge una licenza all'elenco degli elementi acquistabili
 document.querySelector("form#updateForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   document.getElementById("greeting").innerText = "";
@@ -87,7 +89,8 @@ function generateTable() {
 
 document.querySelector("#buyForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-
+  document.getElementById("paypal-button-container").style.visibility = "visible";
+  return false;
 });
 
 function callExternalServer(id, email, payerId) {
@@ -147,6 +150,7 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
             console.log('Transaction completed by ' + details.payer.name.given_name);
             callExternalServer(details.id, details.payer.email_address, details.payer.payer_id);
             console.log(details);
+            document.getElementById("paypal-button-container").style.visibility = "hidden";
           });
         }
       }).render('#paypal-button-container');

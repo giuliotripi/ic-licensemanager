@@ -36,6 +36,19 @@
         /* Add a grey background color to the table header and on hover */
         background-color: #f1f1f1;
       }
+
+      #paypal-button-container {
+        width: 30px;
+        visibility: hidden;
+      }
+
+      #elencoLicenze {
+        display: table;
+        border-style: solid;
+        border-width: 1px;
+        border-color: gray;
+        margin: 15px;
+      }
     </style>
 
     <title>License manager</title>
@@ -44,6 +57,16 @@
     <link type="text/css" rel="stylesheet" href="main.css" />
   </head>
   <body>
+  <header>
+    <div>
+      <a href="login.html">
+        <button>Login</button>
+      </a>
+      <a href="register.html">
+        <button>Sign in</button>
+      </a>
+    </div>
+  </header>
     <main>
       <img src="logo.png" alt="DFINITY logo" />
       <form action="#" id="nameForm">
@@ -63,18 +86,13 @@
         <button type="submit">Aggiungi licenza!</button>
       </form>
 
-      <div>
-        <a href="login.html">
-          <button>Login</button>
-        </a>
-        <a href="register.html">
-          <button>Sign in</button>
-        </a>
-      </div>
 
       <div>
-      <input type="text" id="searchLicense" placeholder="Search for licenses..."> <button id="refresh">Refresh</button>
-      <table id="elencoLicenze">
+        <div class="centered">
+          <label for="searchLicense">Search for a license:</label>
+          <input type="text" id="searchLicense" placeholder="Search for licenses..."> <button id="refresh">Refresh</button>
+        </div>
+      <table id="elencoLicenze" class="centered">
         <thead>
           <tr class="header">
             <th style="width:60%;">Name</th>
@@ -91,7 +109,7 @@
           <input type="submit" value="Acquista"/>
         </form>
 
-        <div id="paypal-button-container"></div>
+        <div id="paypal-button-container" class="centered"></div>
 
       </div>
       <div id="loader">
