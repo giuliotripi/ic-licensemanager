@@ -75,7 +75,7 @@ fn update(license: License) -> String {
         // id_store.borrow().contains_key(license_id.clone().as_ref())
         id_store.borrow().get(&license_id).cloned()
     });
-    if id_previous_owner.is_some() && id_previous_owner.unwrap().to_text().eq(&principal_id.to_text()){
+    if id_previous_owner.is_some() && !id_previous_owner.unwrap().to_text().eq(&principal_id.to_text()){
         return String::from("Non puoi caricare un ID già preso da un altro account")
     }
     ID_STORE.with(|id_store| {
