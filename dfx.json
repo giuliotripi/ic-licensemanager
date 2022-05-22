@@ -24,6 +24,19 @@
         "dist/licenseManager_assets/"
       ],
       "type": "assets"
+    },
+    "internet_identity": {
+      "type": "custom",
+      "candid": "src/internet_identity/internet_identity.did",
+      "wasm": "src/internet_identity/internet_identity.wasm",
+
+      "__1": "There is no standard way to pull remote canisters, so instead we have a dummy build script that",
+      "__2": "simply downloads the Internet Identity canister. See also: https://github.com/dfinity/sdk/issues/2085",
+      "__build": "curl -sSL https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm -o src/internet_indentity/internet_identity.wasm"
+    },
+    "whoami": {
+      "main": "src/whoami/whoami.mo",
+      "type": "motoko"
     }
   },
   "defaults": {
