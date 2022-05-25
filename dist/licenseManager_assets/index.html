@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <style>
+      #myInput {
+        background-image: url('../assets/searchicon.png'); /* Add a search icon to input */
+        background-position: 10px 12px; /* Position the search icon */
+        background-repeat: no-repeat; /* Do not repeat the icon image */
+        width: 100%; /* Full-width */
+        font-size: 16px; /* Increase font-size */
+        padding: 12px 20px 12px 40px; /* Add some padding */
+        border: 1px solid #ddd; /* Add a grey border */
+        margin-bottom: 12px; /* Add some space below the input */
+      }
+
+      #myTable {
+        border-collapse: collapse; /* Collapse borders */
+        width: 100%; /* Full-width */
+        border: 1px solid #ddd; /* Add a grey border */
+        font-size: 18px; /* Increase font-size */
+      }
+
+      #myTable th, #myTable td {
+        text-align: left; /* Left-align text */
+        padding: 12px; /* Add padding */
+      }
+
+      #myTable tr {
+        /* Add a bottom border to all table rows */
+        border-bottom: 1px solid #ddd;
+      }
+
+      #myTable tr.header, #myTable tr:hover {
+        /* Add a grey background color to the table header and on hover */
+        background-color: #f1f1f1;
+      }
+
+      #paypal-button-container {
+        width: 30px;
+        visibility: hidden;
+      }
+
+      #elencoLicenze {
+        display: table;
+        border-style: solid;
+        border-width: 1px;
+        border-color: gray;
+        margin: 15px;
+      }
+    </style>
+
+    <title>License manager</title>
+    <base href="/" />
+    <link rel="icon" href="favicon.ico" />
+    <link type="text/css" rel="stylesheet" href="main.css" />
+  <script defer src="index.js"></script></head>
+  <body>
+  <header>
+    <div>
+      <a href="login.html">
+        <button>Login</button>
+      </a>
+      <a href="register.html">
+        <button>Sign in</button>
+      </a>
+    </div>
+  </header>
+    <main>
+      <img src="logo.png" alt="DFINITY logo" />
+      <form action="#" id="nameForm">
+        <label for="name">Enter your name: &nbsp;</label>
+        <input id="name" alt="Name" type="text" />
+        <button type="submit">Click Me!</button>
+      </form>
+      <form action="#" id="updateForm">
+        <div>
+          <label for="licenseId">Enter license name: &nbsp;</label>
+          <input id="licenseId" placeholder="ID and name" type="text" />
+        </div>
+        <div>
+          <label for="licensePrice">Enter price: &nbsp;</label>
+          <input id="licensePrice" alt="price" type="number" step="0.01" />
+        </div>
+        <button type="submit">Aggiungi licenza!</button>
+      </form>
+
+
+      <div>
+        <div class="centered">
+          <label for="searchLicense">Search for a license:</label>
+          <input type="text" id="searchLicense" placeholder="Search for licenses..."> <button id="refresh">Refresh</button>
+        </div>
+      <table id="elencoLicenze" class="centered">
+        <thead>
+          <tr class="header">
+            <th style="width:60%;">Name</th>
+            <th style="width:40%;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+      </table>
+        <section>
+          <label for="iiUrl">Internet Identity URL:</label>
+          <input size="50" id="iiUrl" type="text" />
+        </section>
+        <section>
+          <button id="loginBtn">Login with Internet Identity</button>
+        </section>
+        <section id="loginStatus">
+          <p>Not logged in</p>
+        </section>
+        <form id="buyForm">
+          <label for="elencoLicenzeBuy">Seleziona la licenza che vuoi acquistare: </label>
+          <select id="elencoLicenzeBuy"></select>
+          <input type="submit" value="Acquista"/>
+        </form>
+
+        <div id="paypal-button-container" class="centered"></div>
+
+      </div>
+      <div id="loader">
+        Please Wait
+        <div class="lds-default">
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+        </div>
+      </div>
+      <section id="greeting"></section>
+    </main>
+  </body>
+</html>

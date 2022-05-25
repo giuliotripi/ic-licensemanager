@@ -4,6 +4,8 @@ import cryptoRandomString from 'crypto-random-string';
 const axios = require("axios");
 const baseUrl = "http://192.168.1.130:8080";
 import { loadScript } from "@paypal/paypal-js";
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { AuthClient } from "@dfinity/auth-client";
 
 let referenceId, amount, customId;
 
@@ -106,9 +108,6 @@ function callExternalServer(id, email, payerId) {
   });
 }
 
-import { Actor, HttpAgent } from "@dfinity/agent";
-import { AuthClient } from "@dfinity/auth-client";
-
 const webapp_id = process.env.WHOAMI_CANISTER_ID;
 
 // The interface of the whoami canister
@@ -119,20 +118,10 @@ export const init = ({ IDL }) => {
   return [];
 };
 
-// Autofills the <input> for the II Url to point to the correct canister.
-document.body.onload = () => {
-  let iiUrl;
-  if (process.env.DFX_NETWORK === "local") {
-    iiUrl = `http://localhost:8000/?canisterId=${process.env.II_CANISTER_ID}`;
-  } else if (process.env.DFX_NETWORK === "ic") {
-    iiUrl = `https://${process.env.II_CANISTER_ID}.ic0.app`;
-  } else {
-    iiUrl = `https://${process.env.II_CANISTER_ID}.dfinity.network`;
-  }
-  document.getElementById("iiUrl").value = iiUrl;
-};
+let i
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
+
   // When the user clicks, we start the login process.
   // First we have to create and AuthClient.
   const authClient = await AuthClient.create();
@@ -145,7 +134,6 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   // We can either use the callback functions directly or wrap in a promise.
   await new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: iiUrl,
       onSuccess: resolve,
       onError: reject,
     });
