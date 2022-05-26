@@ -49,7 +49,7 @@ document.querySelector("form#updateForm").addEventListener("submit", async (e) =
   loader.style.visibility = "visible";
   button.setAttribute("disabled", true);
 
-  const result = await licenseManager.update({id: licenseName, price: parseFloat(cost)});
+  const result = await licenseManager.update({id: licenseName, price: parseFloat(cost), name: licenseName, description: licenseName, duration: 0, perpetual: true, transfer_commission: 0, transferable: true});
 
   loader.style.visibility = "hidden";
   button.removeAttribute("disabled");
@@ -64,7 +64,7 @@ document.querySelector("#refresh").addEventListener("click", async (e) => {
   generateTable();
 
   elencoLicenze.forEach(licenza =>
-      finalHtmlSelect += `<option value='${licenza.id}' data-description='${licenza.id}' data-referenceId='${licenza.id}' data-price='${licenza.price}'>${licenza.id} -> ${licenza.price}€ </option>\n`);
+      finalHtmlSelect += `<option value='${licenza.id}' data-description='${licenza.description}' data-referenceId='${licenza.id}' data-price='${licenza.price}'>${licenza.name} -> ${licenza.price}€ </option>\n`);
 
   document.getElementById("elencoLicenze").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
 

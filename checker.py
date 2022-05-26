@@ -1,3 +1,5 @@
+import datetime
+
 import aiohttp
 from aiohttp import web
 import aiohttp_cors
@@ -41,17 +43,24 @@ async def handlePaypal(request):
 def send_ok_canister(customId: str, referenceId: str, amount):
 	# Identity and Client are dependencies of Agent
 	iden = Identity()
-	client = Client(url="http://holochain.local:8000")
+	client = Client(url="http://localhost:8000")
 	agent = Agent(iden, client)
 
+	date = datetime.datetime.now().strftime("%Y-%m-%d")
+
 	sign = firma.Signature()
-	data = customId + ";" + referenceId + ";" + amount
+	data = customId + "" + referenceId + "" + format(amount, ".2f")
 	signature = sign.sign(data).decode("utf-8") + data.encode("utf-8").hex()
 
 	print(signature)
 
 	# name = agent.query_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([{"type": Types.Text, "value": "ciao"}]))
-	name = agent.update_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([{"type": Types.Text, "value": signature}]))
+	name = agent.update_raw("rwlgt-iiaaa-aaaaa-aaaaa-cai", "confirm_purchase", encode([
+		{"type": Types.Text, "value": signature},
+		{"type": Types.Record(
+			{"license_id": Types.Text, "price": Types.Nat64, "date": Types.Text}),
+			"value": {"license_id": referenceId, "price": amount, "date": date}}
+	]))
 	print(name)
 	print(name[0]["value"])
 	return name[0]["value"]
@@ -89,5 +98,5 @@ app.add_routes([web.get('/', handle),
 				web.get('/{name}', handle)])
 
 if __name__ == '__main__':
-	web.run_app(app)
-	# send_ok_canister()
+	# web.run_app(app)
+	send_ok_canister("ciao", "ciao", 6)

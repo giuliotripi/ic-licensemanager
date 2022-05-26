@@ -28,6 +28,7 @@ use ic_cdk::{
         Principal,
     },
 };
+use serde::de::Unexpected::Str;
 use serde::Deserialize;
 
 mod http;
@@ -573,8 +574,21 @@ type LicenseStore = BTreeMap<String, License>;
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 struct License {
     pub id: String,
-    pub price: u64,
+    pub name: String,
+    pub description: String,
+    pub price: f64,
+    pub perpetual: bool,
+    pub duration: u64,
+    pub transferable: bool,
+    pub transfer_commission: u64
     // pub keywords: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+struct PurchaseInformations {
+    pub license_id: String,
+    pub price: u64,
+    pub date: String
 }
 
 thread_local! {
@@ -679,8 +693,17 @@ fn delete_product(name: String) -> String {
 }
 
 #[ic_cdk_macros::update]
-fn confirm_purchase(signature: String) -> String {
+fn confirm_purchase(signature: String, purchase_info: PurchaseInformations) -> String {
     let orig_data = signature_to_orig_data(signature.clone());
+    let info = purchase_info.clone();
+    let mut struct_content = info.license_id.to_owned();
+    struct_content.push_str(format!("{:.2}", info.price).as_str());
+    struct_content.push_str(info.date.as_str());
+
+    if ! orig_data.eq(struct_content.as_str()) {
+        return format!("Signature contains {} but found {} in struct", orig_data, struct_content);
+    }
+
     let result = match verify_signature(signature.clone(), orig_data.clone()) {
         Ok(ris) => {ris}
         Err(_) => {false}
@@ -692,9 +715,16 @@ fn confirm_purchase(signature: String) -> String {
 
     }
 
+    let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");
 
+    if date.is_err() {
+        return String::from(purchase_info.date + " is not a valid date");
+    }
 
-    format!("The verification result for \"{}\" containing \"{}\" is {}", signature, orig_data, result)
+    let date = date.unwrap();
+
+    let date = date.checked_add_signed(Duration::days(10)).unwrap();
+    format!("The verification result for \"{}\" containing \"{}\" is {}, with id {} expires {}", signature, orig_data, result, purchase_info.license_id, date.format("%Y-%m-%d"))
 }
 //https://docs.rs/ed25519-dalek/latest/ed25519_dalek/
 //https://docs.rs/ed25519/latest/ed25519/

@@ -1,6 +1,18 @@
 type Licenza = record {
     id: text;
+    name: text;
+    description: text;
     price: nat64;
+    perpetual: bool;
+    duration: nat64;
+    transferable: bool;
+    transfer_commission: nat64;
+};
+
+type PurchaseInformations = record {
+    licenseId: text;
+    price: nat64;
+    date: text;
 };
 
 type OwnerResult = variant {
@@ -132,7 +144,7 @@ type HttpResponse = record {
 
 service : {
     "greet": (text) -> (text) query;
-    "confirm_purchase": (text) -> (text);
+    "confirm_purchase": (text, PurchaseInformations) -> (text);
     "list_products": () -> (vec Licenza) query;
     "update_product": (text) -> (text);
     "update": (Licenza) -> (text);
