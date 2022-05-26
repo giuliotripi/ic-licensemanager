@@ -1,1 +1,5 @@
 /target
+.dfx/
+src/declarations/
+my-secret-key
+.idea/
