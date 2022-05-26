@@ -18,6 +18,9 @@ use ic_certified_map::Hash;
 use include_base64::include_base64;
 
 use std::collections::BTreeMap;
+use std::fs::Metadata;
+use candid::pretty::str;
+use chrono::{Duration, NaiveDate};
 use ed25519_dalek::{PublicKey, Signature, SignatureError, Verifier};
 // use ic_cdk::export::Principal;
 use ic_cdk_macros::*;
@@ -72,6 +75,7 @@ struct InitArgs {
     symbol: String,
 }
 
+/*
 #[init]
 fn init(args: InitArgs) {
     STATE.with(|state| {
@@ -83,7 +87,7 @@ fn init(args: InitArgs) {
         state.symbol = args.symbol;
         state.logo = args.logo;
     });
-}
+}*/
 
 #[derive(CandidType, Deserialize)]
 enum Error {
@@ -193,8 +197,19 @@ fn logo() /* -> &'static LogoResult */
 }
 
 #[query(name = "nameDip721")]
-fn name() -> String {
+fn name(/*token_id:nat64*/) -> String {
     STATE.with(|state| state.borrow().name.clone())
+
+    /*STATE.with(|state| {
+        let name = state
+            .borrow()
+            .nfts
+            .get(usize::try_from(token_id)?)
+            .ok_or(Error::InvalidTokenId)?
+            .nameNFT
+            .clone();
+        Ok(name)
+    })*/
 }
 
 #[query(name = "symbolDip721")]
@@ -382,9 +397,10 @@ fn is_approved_for_all(operator: Principal) -> bool {
 
 #[update(name = "mintDip721")]
 fn mint(
+    name: String,
     to: Principal,
     metadata: MetadataDesc,
-    blob_content: Vec<u8>,
+    blob_content: Vec<u8>
 ) -> Result<MintResult, ConstrainedError> {
     let (txid, tkid) = STATE.with(|state| {
         let mut state = state.borrow_mut();
@@ -393,6 +409,7 @@ fn mint(
         }*/
         let new_id = state.nfts.len() as u64;
         let nft = Nft {
+            nameNFT: name,
             owner: to,
             approved: None,
             id: new_id,
@@ -443,6 +460,7 @@ struct State {
 
 #[derive(CandidType, Deserialize)]
 struct Nft {
+    nameNFT: String,
     owner: Principal,
     approved: Option<Principal>,
     id: u64,
@@ -712,7 +730,9 @@ fn confirm_purchase(signature: String, purchase_info: PurchaseInformations) -> S
 
     if result == true {
         //genero NFT
+        //let vettore_metadati = vec![];
 
+        //mint(ic_cdk::api::caller(), vec![], vec![]);
     }
 
     let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");

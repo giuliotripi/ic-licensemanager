@@ -169,7 +169,7 @@ service : {
     setApprovalForAllDip721 : (operator : principal, isApproved : bool) -> (TxReceipt);
     getApprovedDip721 : (token_id : nat64) -> (TxReceipt) query;
     isApprovedForAllDip721 : (operator : principal) -> (bool) query;
-    mintDip721 : (to : principal, metadata : MetadataDesc, blobContent : blob) -> (MintReceipt);
+    mintDip721 : (text, to : principal, metadata : MetadataDesc, blobContent : blob) -> (MintReceipt);
     burnDip721 : (token_id : nat64) -> (TxReceipt);
 
     set_name : (name : text) -> (ManageResult);

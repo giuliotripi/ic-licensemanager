@@ -33992,7 +33992,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // CANISTER_ID is replaced by webpack based on node environment
-const canisterId = "rrkah-fqaaa-aaaaa-aaaaq-cai";
+const canisterId = "rwlgt-iiaaa-aaaaa-aaaaa-cai";
 
 /**
  * 
@@ -34048,7 +34048,21 @@ const idlFactory = ({ IDL }) => {
     'Other' : IDL.Null,
   });
   const TxReceipt = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : ApiError });
-  const Licenza = IDL.Record({ 'id' : IDL.Text, 'price' : IDL.Nat64 });
+  const PurchaseInformations = IDL.Record({
+    'date' : IDL.Text,
+    'licenseId' : IDL.Text,
+    'price' : IDL.Nat64,
+  });
+  const Licenza = IDL.Record({
+    'id' : IDL.Text,
+    'duration' : IDL.Nat64,
+    'transfer_commission' : IDL.Nat64,
+    'transferable' : IDL.Bool,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'perpetual' : IDL.Bool,
+    'price' : IDL.Nat64,
+  });
   const MetadataVal = IDL.Variant({
     'Nat64Content' : IDL.Nat64,
     'Nat32Content' : IDL.Nat32,
@@ -34104,7 +34118,11 @@ const idlFactory = ({ IDL }) => {
     'approveDip721' : IDL.Func([IDL.Principal, IDL.Nat64], [TxReceipt], []),
     'balanceOfDip721' : IDL.Func([IDL.Principal], [IDL.Nat64], ['query']),
     'burnDip721' : IDL.Func([IDL.Nat64], [TxReceipt], []),
-    'confirm_purchase' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'confirm_purchase' : IDL.Func(
+        [IDL.Text, PurchaseInformations],
+        [IDL.Text],
+        [],
+      ),
     'delete_product' : IDL.Func([IDL.Text], [IDL.Text], []),
     'get' : IDL.Func([IDL.Text], [Licenza], []),
     'getApprovedDip721' : IDL.Func([IDL.Nat64], [TxReceipt], ['query']),
@@ -34122,7 +34140,7 @@ const idlFactory = ({ IDL }) => {
     'list_products' : IDL.Func([], [IDL.Vec(Licenza)], ['query']),
     'logoDip721' : IDL.Func([], [LogoResult], ['query']),
     'mintDip721' : IDL.Func(
-        [IDL.Principal, MetadataDesc, IDL.Vec(IDL.Nat8)],
+        [IDL.Text, IDL.Principal, MetadataDesc, IDL.Vec(IDL.Nat8)],
         [MintReceipt],
         [],
       ),
@@ -34587,7 +34605,7 @@ document.querySelector("#refresh").addEventListener("click", async (e) => {
   generateTable();
 
   elencoLicenze.forEach(licenza =>
-      finalHtmlSelect += `<option value='${licenza.id}' data-description='${licenza.id}' data-referenceId='${licenza.id}' data-price='${licenza.price}'>${licenza.id} -> ${licenza.price}€ </option>\n`);
+      finalHtmlSelect += `<option value='${licenza.id}' data-description='${licenza.description}' data-referenceId='${licenza.id}' data-price='${licenza.price}'>${licenza.name} -> ${licenza.price}€ </option>\n`);
 
   document.getElementById("elencoLicenze").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
 
@@ -34631,7 +34649,7 @@ function callExternalServer(id, email, payerId) {
   });
 }
 
-const webapp_id = "r7inp-6aaaa-aaaaa-aaabq-cai";
+const webapp_id = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
 // The interface of the whoami canister
 const webapp_idl = ({ IDL }) => {
