@@ -12,15 +12,20 @@
   <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/sticky-footer-navbar/">
 
   <!-- Bootstrap core CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
 
   <!-- Custom styles for this template -->
   <link href="sticky-footer-navbar.css" rel="stylesheet">
 
   <style>
-    main.container {
+    main.container, .loadingIcon {
       display: none;
+    }
+    .buyElement {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -48,55 +53,160 @@
         <li class="nav-item">
           <a class="nav-link" href="#add">Add</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#">Disabled</a>
-        </li>
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link disabled" href="#">Disabled</a>-->
+<!--        </li>-->
       </ul>
-      <form class="form-inline mt-2 mt-md-0">
-        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-      </form>
+<!--      <form class="form-inline mt-2 mt-md-0">-->
+<!--        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">-->
+<!--        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>-->
+<!--      </form>-->
+      <button class="btn btn-outline-success mt-2 mt-md-0" type="button" id="loginBtn">Login</button>
     </div>
   </nav>
 </header>
 
 <!-- Begin page content -->
 <main role="main" class="container" id="home">
-  <h1 class="mt-5">Sticky footer with fixed navbar</h1>
-  <p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with <code>padding-top: 60px;</code> on the <code>body &gt; .container</code>.</p>
-  <p>Back to <a href="../sticky-footer/">the default sticky footer</a> minus the navbar.</p>
+  <h1 class="mt-5">Home</h1>
+  <p class="lead">This service allows you to sell, buy and exchange licenses</p>
+<!--  <p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with <code>padding-top: 60px;</code> on the <code>body &gt; .container</code>.</p>-->
+<!--  <p>Back to <a href="../sticky-footer/">the default sticky footer</a> minus the navbar.</p>-->
 </main>
 
 <main role="main" class="container" id="licenses">
-  <h1 class="mt-5">List</h1>
-  <p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with <code>padding-top: 60px;</code> on the <code>body &gt; .container</code>.</p>
-  <p>Back to <a href="../sticky-footer/">the default sticky footer</a> minus the navbar.</p>
+  <h1 class="mt-5">My licenses</h1>
+  <p class="lead">Here you can see all the licenses that you bought</p>
+  <table id="myLicenses" class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
 </main>
 
 <main role="main" class="container" id="buy">
   <h1 class="mt-5">Buy</h1>
-  <p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with <code>padding-top: 60px;</code> on the <code>body &gt; .container</code>.</p>
-  <p>Back to <a href="../sticky-footer/">the default sticky footer</a> minus the navbar.</p>
+  <p class="lead">Here you can see a list of all the available licenses and buy one of them.</p>
+  <!-- TODO: add pagination -->
+  <div id="searchAndListLicenses">
+    <label for="searchLicense">Search for a license name</label>
+    <div class="row" style="margin-bottom: 15px">
+      <div class="col-sm">
+        <input class="form-control" type="text" placeholder="Search...." id="searchLicense">
+      </div>
+      <div class="col-sm">
+        <button type="button" class="btn btn-primary" id="refresh">
+          <span class="spinner-border spinner-border-sm loadingIcon" role="status" aria-hidden="true" style="display: none"></span>
+          Refresh list
+        </button>
+      </div>
+    </div>
+  <!--  <label for="elencoLicenzeBuy">Seleziona la licenza da acquistare: </label>-->
+  <!--  <select id="elencoLicenzeBuy"></select>-->
+    <table class="table table-striped" id="elencoLicenze">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Price</th>
+          <th scope="col">Duration</th>
+          <th scope="col">Buy</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+    <div id="noLicenseToShow"></div>
+  </div>
+  <div id="checkout" style="display: none">
+    Here is the license you are about to buy:
+    <table class="table" id="licenseDetails" style="max-width: 400px">
+
+    </table>
+    <div id="paypal-button-container" style="width: 30px"></div>
+    <button type="button" class="btn btn-primary" id="cancelCheckout">Cancel</button>
+  </div>
 </main>
 
 <main role="main" class="container" id="add">
-  <h1 class="mt-5">Add</h1>
-  <p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with <code>padding-top: 60px;</code> on the <code>body &gt; .container</code>.</p>
-  <p>Back to <a href="../sticky-footer/">the default sticky footer</a> minus the navbar.</p>
+  <h1 class="mt-5">Add a license</h1>
+  <p class="lead">In this page you can add a license to this service that will be bought from your clients. If you specify the same ID, the existing license will be updated.</p>
+  <form id="addLicenseForm">
+    <div class="form-group">
+      <label for="inputLicenseId">License ID</label>
+      <input type="text" class="form-control" id="inputLicenseId" aria-describedby="idHelp" placeholder="Enter license ID" required>
+      <small id="idHelp" class="form-text text-muted">This will identify your license in the system.</small>
+    </div>
+    <div class="form-group">
+      <label for="inputLicenseName">Item name</label>
+      <input type="text" class="form-control" id="inputLicenseName" placeholder="Enter the item name" required>
+    </div>
+    <div class="form-group">
+      <label for="inputLicensePrice">Price in €</label>
+      <div class="input-group">
+        <input type="number" step="0.01" min="0" class="form-control" id="inputLicensePrice" placeholder="Enter the item price" required>
+        <div class="input-group-append">
+          <span class="input-group-text" id="inputGroupPrepend">€</span>
+        </div>
+        <div class="invalid-feedback">
+          Please enter a price.
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="inputLicenseDescription">Description</label>
+      <textarea class="form-control" id="inputLicenseDescription" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="inputLicenseDuration">Duration</label>
+      <input type="text" class="form-control" id="inputLicenseDuration" placeholder="Enter the duration" required>
+      <small id="durationHelp" class="form-text text-muted">After how many days the license will expire. 0 for life licenses.</small>
+    </div>
+    <div class="form-group">
+      <label for="inputLicenseTransferFees">Transfer fees in €</label>
+      <div class="input-group">
+        <input type="text" class="form-control" min="0" step="0.01" id="inputLicenseTransferFees" placeholder="Enter the transfer fees" required>
+        <div class="input-group-append">
+          <span class="input-group-text" id="inputGroupPrepend2">€</span>
+        </div>
+        <div class="invalid-feedback">
+          Please enter a value.
+        </div>
+      </div>
+    </div>
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="inputLicenseCanBeTransferred">
+      <label class="form-check-label" for="inputLicenseCanBeTransferred">The license can be transferred</label>
+    </div>
+    <button type="submit" class="btn btn-primary" id="addLicenseButton">
+      <span class="spinner-border spinner-border-sm loadingIcon" role="status" aria-hidden="true"></span>
+      Add
+    </button>
+    <button type="button" class="btn btn-secondary" id="addLicenseCompileDefaults">Compile defaults</button>
+  </form>
+  <section id="result" style="margin-top: 15px"></section>
 </main>
 
 <footer class="footer">
   <div class="container">
-    <span class="text-muted">Place sticky footer content here.</span>
+    <span class="text-muted">&copy; 2022 - Giulio Tripi - Simone Amorati</span>
   </div>
 </footer>
 
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></sc ' + 'ript>')</script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+<!--<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></sc ' + 'ript>')</script>-->
 </body>
 </html>

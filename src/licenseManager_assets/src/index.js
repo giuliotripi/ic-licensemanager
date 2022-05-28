@@ -11,11 +11,15 @@ let referenceId, amount, customId;
 
 let elencoLicenze;
 
+let lastLicenseListRefresh = 0;
+
 //navbar
+//only one onload function is supported at a time
 document.body.onload = () => {
   let hash = window.location.hash;
   console.log(hash);
   displaySection(hash);
+  checkIIcanisterId();
 };
 
 //TODO: prende solo il primo elemento, querySel restituisce una lista sulla quale operare
@@ -27,11 +31,13 @@ document.querySelector(".nav-link").addEventListener("click", async (e) => {
   // return false;
 });
 
-window.addEventListener('hashchange', function() {
-  displaySection(window.location.hash);
+
+//pagination
+window.addEventListener('hashchange', async function () {
+  await displaySection(window.location.hash);
 }, false);
 
-function displaySection(sectionName) {
+async function displaySection(sectionName) {
   if(sectionName.length > 0 && sectionName[0] === "#")
     sectionName = sectionName.substring(1);
   $("main.container").css("display", "none");
@@ -46,6 +52,7 @@ function displaySection(sectionName) {
       break;
     case "buy":
       document.getElementById("buy").style.display = "inherit";
+      await refreshLicenseList();
       break;
     case "add":
       document.getElementById("add").style.display = "inherit";
@@ -56,67 +63,87 @@ function displaySection(sectionName) {
   }
 }
 
-/*
-document.querySelector("form#nameForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  document.getElementById("greeting").innerText = "";
-  const loader = document.getElementById("loader");
-
-  const button = e.target.querySelector("button");
-
-  const name = document.getElementById("name").value.toString();
-
-  loader.style.visibility = "visible";
-  button.setAttribute("disabled", true);
-  document.getElementById("name").setAttribute("disabled", true);
-
-  // Interact with foo actor, calling the greet method
-  const greeting = await licenseManager.greet(name);
-
-  loader.style.visibility = "hidden";
-  button.removeAttribute("disabled");
-  document.getElementById("name").removeAttribute("disabled");
-  document.getElementById("greeting").innerText = greeting;
-
-  return false;
-});
-
 //aggiunge una licenza all'elenco degli elementi acquistabili
-document.querySelector("form#updateForm").addEventListener("submit", async (e) => {
+document.querySelector("form#addLicenseForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  document.getElementById("greeting").innerText = "";
-  const loader = document.getElementById("loader");
+  document.getElementById("result").innerText = "";
 
   const button = e.target.querySelector("button");
+  // console.log(button);
+  // console.log(e.target);
+  // console.log(e.target.querySelector(".loadingIcon"));
+  // console.log(button.querySelector(".loadingIcon"));
+  // const $loader = $("#addLicenseForm .loadingIcon");
+  const loader = e.target.querySelector(".loadingIcon");
 
-  const licenseName = document.getElementById("licenseId").value.toString();
-  const cost = document.getElementById("licensePrice").value.toString();
+  const licenseId = document.getElementById("inputLicenseId").value;
+  const licenseName = document.getElementById("inputLicenseName").value;
+  const licensePrice = document.getElementById("inputLicensePrice").value;
+  const licenseDescription = document.getElementById("inputLicenseDescription").value;
+  const licenseDuration = document.getElementById("inputLicenseDuration").value;
+  const licenseTransferFees = document.getElementById("inputLicenseTransferFees").value;
+  const licenseTransferrable = document.getElementById("inputLicenseCanBeTransferred").checked;
+  const perpetual = parseInt(licenseDuration) === 0;
 
-  loader.style.visibility = "visible";
+  // $loader.css("display", "initial");
+  loader.style.display = "initial";
   button.setAttribute("disabled", true);
 
-  const result = await licenseManager.update({id: licenseName, price: parseFloat(cost), name: licenseName, description: licenseName, duration: 0, perpetual: true, transfer_commission: 0, transferable: true});
+  const result = await licenseManager.update({id: licenseId, price: parseFloat(licensePrice), name: licenseName, description: licenseDescription, duration: parseInt(licenseDuration), perpetual: perpetual, transfer_commission: parseFloat(licenseTransferFees), transferable: licenseTransferrable});
 
-  loader.style.visibility = "hidden";
+  // $loader.css("display", "none");
+  loader.style.display = "none";
   button.removeAttribute("disabled");
-  document.getElementById("greeting").innerText = result;
+  document.getElementById("result").innerText = result;
 
   return false;
 });
+
+import { faker } from '@faker-js/faker';
+
+document.getElementById("addLicenseCompileDefaults").addEventListener("click", async (e) => {
+  document.getElementById("inputLicenseId").value = cryptoRandomString({length: 5, type: "alphanumeric"});
+  document.getElementById("inputLicenseName").value = faker.name.firstName();
+  document.getElementById("inputLicensePrice").value = parseInt(cryptoRandomString({length: 3, type: "numeric"}))/10;
+  document.getElementById("inputLicenseDescription").value = faker.lorem.words(10);
+  document.getElementById("inputLicenseDuration").value = 0;
+  document.getElementById("inputLicenseTransferFees").value = 0;
+  document.getElementById("inputLicenseCanBeTransferred").checked = true;
+});
+
+
 document.querySelector("#refresh").addEventListener("click", async (e) => {
+
+  await refreshLicenseList(e);
+
+  return false;
+});
+
+async function refreshLicenseList(e) {
+  let loader;
+  let button;
+  if(e !== undefined) {
+    loader = e.target.querySelector(".loadingIcon");
+    button = e.target;
+  } else {
+    button = document.querySelector("#refresh");
+    loader = document.querySelector("#refresh .loadingIcon");
+  }
+
+  button.setAttribute("disabled", true);
+  loader.style.display = "initial";
+
   elencoLicenze = await licenseManager.list_products();
-  let finalHtmlSelect = "";
+
+  lastLicenseListRefresh = Date.now();
+
+  loader.style.display = "none";
+  button.removeAttribute("disabled");
 
   generateTable();
 
-  elencoLicenze.forEach(licenza =>
-      finalHtmlSelect += `<option value='${licenza.id}' data-description='${licenza.description}' data-referenceId='${licenza.id}' data-price='${licenza.price}'>${licenza.name} -> ${licenza.price}€ </option>\n`);
-
   document.getElementById("elencoLicenze").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
-
-  document.getElementById("elencoLicenzeBuy").innerHTML = finalHtmlSelect;
-  return false;
-});
+}
 
 document.querySelector("#searchLicense").addEventListener("change", async (e) => {
   generateTable();
@@ -130,15 +157,36 @@ function generateTable() {
 
   let filtro = document.getElementById("searchLicense").value;
 
-  elencoLicenze.filter(licenza => licenza.id.includes(filtro)).forEach(licenza => finalHtml += "<tr><td>" + licenza.id + "</td><td>" + licenza.price + "€ </td></tr>\n");
+  elencoLicenze.filter(licenza => licenza.id.includes(filtro)).slice(0, 30).forEach(
+      licenza => finalHtml += "<tr><td>" + licenza.id + "</td><td>" + licenza.name + "</td><td>" + licenza.price + "€</td><td>" + licenza.duration + "</td>" +
+          "<td class='buyElement' data-license-id='" + licenza.id + "'>Buy</td></tr>\n"
+  );
 
   document.querySelector("#elencoLicenze > tbody").innerHTML = finalHtml;
 }
 
-document.querySelector("#buyForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  document.getElementById("paypal-button-container").style.visibility = "visible";
-  return false;
+$("#elencoLicenze").on("click", ".buyElement",function (e) {
+  $("#searchAndListLicenses").css("display", "none");
+  $("#checkout").css("display", "block");
+  let finalHtml = "";
+  let licenseId = e.target.getAttribute("data-license-id");
+  let license = elencoLicenze.find(l => l.id === licenseId);
+
+  let duration = (license.duration === 0) ? "unlimited" : license.duration + " days";
+
+  finalHtml += `<tr><td>ID</td><td>${license.id}</td></tr>`;
+  finalHtml += `<tr><td>Name</td><td>${license.name}</td></tr>`;
+  finalHtml += `<tr><td>Price</td><td>${license.price}</td></tr>`;
+  finalHtml += `<tr><td>Description</td><td>${license.description}</td></tr>`;
+  finalHtml += `<tr><td>Transferable</td><td>${license.transferable}</td></tr>`;
+  finalHtml += `<tr><td>Transfer commission</td><td>${license.transfer_commission}</td></tr>`;
+  finalHtml += `<tr><td>Duration</td><td>${duration}</td></tr>`;
+  $("#licenseDetails").html(finalHtml);
+});
+
+document.getElementById("cancelCheckout").addEventListener("click", async (e) => {
+  $("#searchAndListLicenses").css("display", "");
+  $("#checkout").css("display", "none");
 });
 
 function callExternalServer(id, email, payerId) {
@@ -166,7 +214,7 @@ export const init = ({ IDL }) => {
 };
 
 // Autofills the <input> for the II Url to point to the correct canister.
-document.body.onload = () => {
+function checkIIcanisterId() {
   let iiUrl;
   if (process.env.DFX_NETWORK === "local") {
     iiUrl = `http://localhost:8000/?canisterId=${process.env.II_CANISTER_ID}`;
@@ -175,9 +223,9 @@ document.body.onload = () => {
   } else {
     iiUrl = `https://${process.env.II_CANISTER_ID}.dfinity.network`;
   }
-  document.getElementById("iiUrl").value = iiUrl;
+  // document.getElementById("iiUrl").value = iiUrl;
   console.log(process.env, process.env.DFX_NETWORK, process.env.II_CANISTER_ID)
-};
+}
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
 
@@ -186,7 +234,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   const authClient = await AuthClient.create();
 
   // Find out which URL should be used for login.
-  const iiUrl = document.getElementById("iiUrl").value;
+  // const iiUrl = document.getElementById("iiUrl").value;
 
   // Call authClient.login(...) to login with Internet Identity. This will open a new tab
   // with the login prompt. The code has to wait for the login process to complete.
@@ -266,4 +314,4 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
     })
     .catch((err) => {
       console.error("failed to load the PayPal JS SDK script", err);
-    });*/
+    });
