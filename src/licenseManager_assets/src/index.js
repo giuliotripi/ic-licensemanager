@@ -52,15 +52,37 @@ async function displaySection(sectionName) {
       break;
     case "buy":
       document.getElementById("buy").style.display = "inherit";
-      await refreshLicenseList();
+      await cancelCheckout();//if I was in this section with a checkout it is necessary to hide it
+      await refreshLicenseList();//I refresh the data on first load of the page in this section and every time i go to this tab
       break;
     case "add":
       document.getElementById("add").style.display = "inherit";
       break;
     default:
-      document.getElementById("home").style.display = "inherit";
+      await difficultPathName(sectionName);
       break;
   }
+}
+
+async function difficultPathName(sectionName) {
+  let path = sectionName.split("/");
+  console.log(path);
+  if(path.length === 1) {
+    showNotFound();
+  } else if(path.length === 2) {
+    if(path[0] === "buy") {
+      await showDetailBuyPage(path[1]);
+      document.getElementById("buy").style.display = "inherit";
+    }
+  } else {
+    showNotFound();
+  }
+}
+
+function showNotFound(message) {
+  $("main.container").css("display", "none");
+  document.getElementById("notFound").style.display = "inherit";
+  $("#description404").text(message + "Ref: " + window.location.hash);
 }
 
 //aggiunge una licenza all'elenco degli elementi acquistabili
@@ -165,15 +187,27 @@ function generateTable() {
   document.querySelector("#elencoLicenze > tbody").innerHTML = finalHtml;
 }
 
-$("#elencoLicenze").on("click", ".buyElement",function (e) {
+$("#elencoLicenze").on("click", ".buyElement",async function (e) {
+  let licenseId = e.target.getAttribute("data-license-id");
+  await showDetailBuyPage(licenseId);
+  window.location.hash = "#buy/" + licenseId;
+});
+
+async function showDetailBuyPage(licenseId) {
   $("#searchAndListLicenses").css("display", "none");
   $("#checkout").css("display", "block");
-  let finalHtml = "";
-  let licenseId = e.target.getAttribute("data-license-id");
+
+  if(lastLicenseListRefresh === 0)
+    await refreshLicenseList();
+
   let license = elencoLicenze.find(l => l.id === licenseId);
 
-  let duration = (license.duration === 0) ? "unlimited" : license.duration + " days";
+  if(license === undefined)
+    return showNotFound("License ID not valid. ");
 
+  let duration = (parseInt(license.duration) === 0) ? "unlimited" : license.duration + " days";
+
+  let finalHtml = "";
   finalHtml += `<tr><td>ID</td><td>${license.id}</td></tr>`;
   finalHtml += `<tr><td>Name</td><td>${license.name}</td></tr>`;
   finalHtml += `<tr><td>Price</td><td>${license.price}</td></tr>`;
@@ -182,12 +216,14 @@ $("#elencoLicenze").on("click", ".buyElement",function (e) {
   finalHtml += `<tr><td>Transfer commission</td><td>${license.transfer_commission}</td></tr>`;
   finalHtml += `<tr><td>Duration</td><td>${duration}</td></tr>`;
   $("#licenseDetails").html(finalHtml);
-});
+}
 
-document.getElementById("cancelCheckout").addEventListener("click", async (e) => {
+document.getElementById("cancelCheckout").addEventListener("click", cancelCheckout);
+
+async function cancelCheckout() {
   $("#searchAndListLicenses").css("display", "");
   $("#checkout").css("display", "none");
-});
+}
 
 function callExternalServer(id, email, payerId) {
   //https://axios-http.com/docs/post_example
@@ -198,6 +234,7 @@ function callExternalServer(id, email, payerId) {
     } else {
       alert("Transazione fallita: " + response.data.message);
     }
+    document.getElementById("paypal-button-container").style.visibility = "visible";
   }).catch(function (response) {
 
   });
@@ -276,15 +313,15 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
           // Set up the transaction
           //https://developer.paypal.com/docs/api/orders/v2/#definition-purchase_unit_request
           console.log("Setting up the transaction...");
-          const selectLicenze = document.getElementById("elencoLicenzeBuy");
-          const selectedElement = selectLicenze.options[selectLicenze.selectedIndex];
-          if(selectedElement === undefined) {
-            alert("Nessun elemento selezionato");
+          const licenseId = window.location.hash.split("/")[1];
+          const license = elencoLicenze.find(l => l.id === licenseId);
+          if(license === undefined) {
+            alert("License not found");
             return;
           }
-          const description = selectedElement.getAttribute("data-description");
-          referenceId = selectedElement.getAttribute("data-referenceId");
-          amount = parseFloat(selectedElement.dataset.price);
+          const name = license.name;
+          referenceId = license.id;
+          amount = parseFloat(license.price);
           amount = amount.toFixed(2);
           customId = cryptoRandomString({length: 100, type: "alphanumeric"});
           return actions.order.create({
@@ -293,7 +330,7 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
                 value: amount,
                 currency_code: "EUR"
               },
-              description: description,
+              description: name,
               custom_id: customId, //Appears in transaction and settlement reports but is not visible to the payer.
               reference_id: referenceId,
               // invoice_id: "invoice" + Math.floor(Math.random() * 100000000000000000000000000)

@@ -67,6 +67,13 @@
 </header>
 
 <!-- Begin page content -->
+<main role="main" class="container" id="notFound">
+  <h1 class="mt-5">Page not found</h1>
+  <p class="lead">This page does not exists</p>
+  <p id="description404"></p>
+</main>
+
+
 <main role="main" class="container" id="home">
   <h1 class="mt-5">Home</h1>
   <p class="lead">This service allows you to sell, buy and exchange licenses</p>
@@ -117,7 +124,7 @@
           <th scope="col">Name</th>
           <th scope="col">Price</th>
           <th scope="col">Duration</th>
-          <th scope="col">Buy</th>
+          <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -190,7 +197,7 @@
       <span class="spinner-border spinner-border-sm loadingIcon" role="status" aria-hidden="true"></span>
       Add
     </button>
-    <button type="button" class="btn btn-secondary" id="addLicenseCompileDefaults">Compile defaults</button>
+    <button type="button" class="btn btn-secondary" id="addLicenseCompileDefaults">Compile random</button>
   </form>
   <section id="result" style="margin-top: 15px"></section>
 </main>
