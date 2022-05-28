@@ -11,6 +11,52 @@ let referenceId, amount, customId;
 
 let elencoLicenze;
 
+//navbar
+document.body.onload = () => {
+  let hash = window.location.hash;
+  console.log(hash);
+  displaySection(hash);
+};
+
+//TODO: prende solo il primo elemento, querySel restituisce una lista sulla quale operare
+document.querySelector(".nav-link").addEventListener("click", async (e) => {
+  // e.preventDefault();
+  // console.log(e);
+  // console.log(this);
+  // displaySection(this.getAttribute("href"));
+  // return false;
+});
+
+window.addEventListener('hashchange', function() {
+  displaySection(window.location.hash);
+}, false);
+
+function displaySection(sectionName) {
+  if(sectionName.length > 0 && sectionName[0] === "#")
+    sectionName = sectionName.substring(1);
+  $("main.container").css("display", "none");
+  // document.querySelector("main.container").style.display = "none"; //solo sul primo
+  switch (sectionName) {
+    case "":
+    case "home":
+      document.getElementById("home").style.display = "inherit";
+      break;
+    case "licenses":
+      document.getElementById("licenses").style.display = "inherit";
+      break;
+    case "buy":
+      document.getElementById("buy").style.display = "inherit";
+      break;
+    case "add":
+      document.getElementById("add").style.display = "inherit";
+      break;
+    default:
+      document.getElementById("home").style.display = "inherit";
+      break;
+  }
+}
+
+/*
 document.querySelector("form#nameForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   document.getElementById("greeting").innerText = "";
@@ -96,6 +142,7 @@ document.querySelector("#buyForm").addEventListener("submit", async (e) => {
 });
 
 function callExternalServer(id, email, payerId) {
+  //https://axios-http.com/docs/post_example
   axios.get(baseUrl + "/check", {params: {id, referenceId, amount, customId, email, payerId}}).then(function (response) {
     console.log(response.data);
     if(response.data.ok) {
@@ -118,7 +165,19 @@ export const init = ({ IDL }) => {
   return [];
 };
 
-let i
+// Autofills the <input> for the II Url to point to the correct canister.
+document.body.onload = () => {
+  let iiUrl;
+  if (process.env.DFX_NETWORK === "local") {
+    iiUrl = `http://localhost:8000/?canisterId=${process.env.II_CANISTER_ID}`;
+  } else if (process.env.DFX_NETWORK === "ic") {
+    iiUrl = `https://${process.env.II_CANISTER_ID}.ic0.app`;
+  } else {
+    iiUrl = `https://${process.env.II_CANISTER_ID}.dfinity.network`;
+  }
+  document.getElementById("iiUrl").value = iiUrl;
+  console.log(process.env, process.env.DFX_NETWORK, process.env.II_CANISTER_ID)
+};
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
 
@@ -134,6 +193,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   // We can either use the callback functions directly or wrap in a promise.
   await new Promise((resolve, reject) => {
     authClient.login({
+      identityProvider: "http://localhost:8000/?canisterId=qoctq-giaaa-aaaaa-aaaea-cai",
       onSuccess: resolve,
       onError: reject,
     });
@@ -206,4 +266,4 @@ loadScript({ "client-id": "AVU3VIXs5KxLh3u6zXANqSwG9t53d3agoElb-z3ploa6ooLTmDst2
     })
     .catch((err) => {
       console.error("failed to load the PayPal JS SDK script", err);
-    });
+    });*/

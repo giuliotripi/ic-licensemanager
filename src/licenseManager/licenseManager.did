@@ -2,7 +2,7 @@ type Licenza = record {
     id: text;
     name: text;
     description: text;
-    price: nat64;
+    price: float64;
     perpetual: bool;
     duration: nat64;
     transferable: bool;

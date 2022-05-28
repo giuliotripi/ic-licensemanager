@@ -1,4 +1,61 @@
-# Hello Example
+# License manager
+
+This is an example project for Blockchain and cryptocurrencies exam @ University of Bologna.
+
+## Authentication
+
+In order to test the authentication with Internet Identity you either need a physical FIDO key, or
+use Mozilla setting:
+```
+security.webauth.webauthn_enable_softtoken=true
+security.webauth.webauthn_enable_usbtoken=false
+```
+
+[source](https://stackoverflow.com/questions/52445624/how-to-use-webauthn-without-key-fob)
+
+
+## References
+
+https://github.com/rocklabs-io/ic-py
+
+https://github.com/rocklabs-io/ic-py/tree/main/examples Candid type - Python type
+
+https://axios-http.com/docs/post_example
+
+https://internetcomputer.org/docs/current/developer-docs/functionality/internet-identity/integrate-identity/ useful for deploy command of II on local
+
+https://github.com/dfinity/internet-identity/blob/main/docs/internet-identity-spec.adoc#client-auth-protocol docs of II
+https://github.com/dfinity/internet-identity/blob/main/docs/internet-identity-spec.adoc#deploying-on-testnets not so clear
+
+
+## Run II in local
+
+It is important that host is localhost, otherwise it displays a white page!!!!!!!
+
+eg if you deploy the server on test.local it display a white page
+
+if you connect to localhost everything works
+
+```bash
+# After checking out dfinity/internet-identity, run this in `./demos/using-dev-build`:
+$ dfx start --background --clean
+$ npm ci
+$ dfx deploy --no-wallet --argument '(null)'
+```
+
+### Execution
+
+If you have it in another computer and deploy it via ssh:
+
+```bash
+rsync -a IC/ test.local:project
+
+
+ssh test.local -L 8000:localhost:8000
+
+```
+
+This way you can test it in your local PC using localhost as host.
 
 ## Summary
 
