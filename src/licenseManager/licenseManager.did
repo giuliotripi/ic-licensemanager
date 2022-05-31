@@ -158,7 +158,7 @@ service : {
     transferFromDip721 : (from : principal, to : principal, token_id : nat64) -> (TxReceipt);
     supportedInterfacesDip721 : () -> (vec InterfaceId) query;
     logoDip721 : () -> (LogoResult) query;
-    nameDip721 : () -> (text) query;
+    nameDip721 : (token_id : nat64) -> (text);
     symbolDip721 : () -> (text) query;
     totalSupplyDip721 : () -> (nat64) query;
     getMetadataDip721 : (token_id : nat64) -> (MetadataResult) query;
@@ -169,7 +169,7 @@ service : {
     setApprovalForAllDip721 : (operator : principal, isApproved : bool) -> (TxReceipt);
     getApprovedDip721 : (token_id : nat64) -> (TxReceipt) query;
     isApprovedForAllDip721 : (operator : principal) -> (bool) query;
-    mintDip721 : (text, to : principal, metadata : MetadataDesc, blobContent : blob) -> (MintReceipt);
+    mintDip721 : (text, to : principal, metadata : MetadataDesc) -> (MintReceipt);
     burnDip721 : (token_id : nat64) -> (TxReceipt);
 
     set_name : (name : text) -> (ManageResult);

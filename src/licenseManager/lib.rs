@@ -196,21 +196,6 @@ fn logo() /* -> &'static LogoResult */
     STATE.with(|state| call::reply((state.borrow().logo.as_ref().unwrap_or(&DEFAULT_LOGO),)))
 }
 
-#[query(name = "nameDip721")]
-fn name(/*token_id:nat64*/) -> String {
-    STATE.with(|state| state.borrow().name.clone())
-
-    /*STATE.with(|state| {
-        let name = state
-            .borrow()
-            .nfts
-            .get(usize::try_from(token_id)?)
-            .ok_or(Error::InvalidTokenId)?
-            .nameNFT
-            .clone();
-        Ok(name)
-    })*/
-}
 
 #[query(name = "symbolDip721")]
 fn symbol() -> String {
@@ -395,26 +380,29 @@ fn is_approved_for_all(operator: Principal) -> bool {
 // mint interface
 // --------------
 
+
 #[update(name = "mintDip721")]
 fn mint(
     name: String,
     to: Principal,
-    metadata: MetadataDesc,
-    blob_content: Vec<u8>
+    metadata: MetadataDesc
+    //blob_content: Vec<u8>
 ) -> Result<MintResult, ConstrainedError> {
     let (txid, tkid) = STATE.with(|state| {
         let mut state = state.borrow_mut();
         /*if !state.custodians.contains(&api::caller()) {
             return Err(ConstrainedError::Unauthorized);
         }*/
+
         let new_id = state.nfts.len() as u64;
         let nft = Nft {
-            nameNFT: name,
             owner: to,
             approved: None,
             id: new_id,
             metadata,
-            content: blob_content,
+            //content: blob_content,
+            name: name,
+
         };
         state.nfts.push(nft);
         Ok((state.next_txid(), new_id))
@@ -424,6 +412,27 @@ fn mint(
         id: txid,
         token_id: tkid,
     })
+}
+
+#[query(name = "nameDip721")]
+fn name(token_id:u64) -> String {
+    let id_input = usize::try_from(token_id);
+    if id_input.is_err() {
+        return String::from("Errore input");
+    }
+    let token_id = id_input.unwrap();
+
+    let nft = STATE.with(|state| {
+        let mut state = state.borrow_mut();
+        state
+            .nfts
+            .get(token_id).cloned()
+    });
+    return if nft.is_some() {
+        String::from(nft.unwrap().name)
+    } else {
+        String::from("ID non trovato")
+    }
 }
 
 // --------------
@@ -438,12 +447,12 @@ fn burn(token_id: u64) -> Result {
             .nfts
             .get_mut(usize::try_from(token_id)?)
             .ok_or(Error::InvalidTokenId)?;
-        if nft.owner != api::caller() {
+        /*if nft.owner != api::caller() {
             Err(Error::Unauthorized)
-        } else {
-            nft.owner = MGMT;
-            Ok(state.next_txid())
-        }
+        } else {*/
+        nft.owner = MGMT;
+        Ok(state.next_txid())
+        //}
     })
 }
 
@@ -458,27 +467,27 @@ struct State {
     txid: u128,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 struct Nft {
-    nameNFT: String,
     owner: Principal,
     approved: Option<Principal>,
     id: u64,
     metadata: MetadataDesc,
-    content: Vec<u8>,
+    //content: Vec<u8>,
+    name: String,
 }
 
 type MetadataDesc = Vec<MetadataPart>;
 type MetadataDescRef<'a> = &'a [MetadataPart];
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 struct MetadataPart {
     purpose: MetadataPurpose,
     key_val_data: HashMap<String, MetadataVal>,
     data: Vec<u8>,
 }
 
-#[derive(CandidType, Deserialize, PartialEq)]
+#[derive(CandidType, Deserialize, PartialEq, Clone)]
 enum MetadataPurpose {
     Preview,
     Rendered,
@@ -491,7 +500,7 @@ struct MintResult {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 enum MetadataVal {
     TextContent(String),
     BlobContent(Vec<u8>),
@@ -581,8 +590,8 @@ fn set_custodian(user: Principal, custodian: bool) -> Result<()> {
 }
 
 #[query]
-fn is_custodian(Principal: Principal) -> bool {
-    STATE.with(|state| state.borrow().custodians.contains(&Principal))
+fn is_custodian(principal: Principal) -> bool {
+    STATE.with(|state| state.borrow().custodians.contains(&principal))
 }
 
 //String, id account che esegue l'operazione
