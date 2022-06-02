@@ -607,7 +607,7 @@ struct License {
     pub perpetual: bool,
     pub duration: u64,
     pub transferable: bool,
-    pub transfer_commission: u64
+    pub transfer_commission: f64
     // pub keywords: Vec<String>,
 }
 

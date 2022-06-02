@@ -6,7 +6,7 @@ type Licenza = record {
     perpetual: bool;
     duration: nat64;
     transferable: bool;
-    transfer_commission: nat64;
+    transfer_commission: float64;
 };
 
 type PurchaseInformations = record {

@@ -41,16 +41,16 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
+        <li class="nav-item" id="homeButton">
           <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" id="licensesButton">
           <a class="nav-link" href="#licenses">My licenses</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" id="buyButton">
           <a class="nav-link" href="#buy">Buy</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" id="addButton">
           <a class="nav-link" href="#add">Add</a>
         </li>
 <!--        <li class="nav-item">-->
@@ -61,6 +61,7 @@
 <!--        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">-->
 <!--        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>-->
 <!--      </form>-->
+      <span id="loginStatus" style="color: white; font-size: 1.2em; font-weight: bold; margin-right: 15px;"></span>
       <button class="btn btn-outline-success mt-2 mt-md-0" type="button" id="loginBtn">Login</button>
     </div>
   </nav>
@@ -139,7 +140,9 @@
 
     </table>
     <div id="paypal-button-container" style="width: 30px"></div>
-    <button type="button" class="btn btn-primary" id="cancelCheckout">Cancel</button>
+    <a href="#buy">
+      <button type="button" class="btn btn-primary" id="cancelCheckout">Cancel</button>
+    </a>
   </div>
 </main>
 
