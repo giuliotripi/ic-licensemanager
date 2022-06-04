@@ -1,27 +1,33 @@
-import { licenseManager } from "../../declarations/licenseManager";
+import {createActor as licenseManagerCreateActor, licenseManager} from "../../declarations/licenseManager";
 import cryptoRandomString from 'crypto-random-string';
+import {loadScript} from "@paypal/paypal-js";
+import {Actor, HttpAgent} from "@dfinity/agent";
+import {AuthClient, LocalStorage} from "@dfinity/auth-client";
+import {faker} from '@faker-js/faker';
 
 const axios = require("axios");
 const baseUrl = "http://192.168.1.130:8080";
-import { loadScript } from "@paypal/paypal-js";
-import { Actor, HttpAgent } from "@dfinity/agent";
-import { AuthClient, LocalStorage } from "@dfinity/auth-client";
+
 
 let referenceId, amount, customId;
 
-let elencoLicenze;
+let elencoLicenze, elencoMieLicenze;
 
 let lastLicenseListRefresh = 0;
 
 let myIdentity = null;
+
+let authClient;
+
+let licenseManagerActor = licenseManager;
 
 //navbar
 //only one onload function is supported at a time
 document.body.onload = async () => {
   let hash = window.location.hash;
   console.log(hash);
-  await displaySection(hash);
   await checkAuth();
+  await displaySection(hash);
   checkIIcanisterId();
   let link = document.querySelector("link[rel~='icon']");
   if (!link) {
@@ -62,6 +68,7 @@ async function displaySection(sectionName) {
     case "licenses":
       document.getElementById("licenses").style.display = "inherit";
       $("#licensesButton").addClass("active");
+      await refreshMyLicenseList();
       break;
     case "buy":
       document.getElementById("buy").style.display = "inherit";
@@ -89,6 +96,8 @@ async function difficultPathName(sectionName) {
       $("#buyButton").addClass("active");
       await showDetailBuyPage(path[1]);
       document.getElementById("buy").style.display = "inherit";
+    } else if(path[0] === "licenses") {
+
     }
   } else {
     showNotFound();
@@ -129,20 +138,8 @@ document.querySelector("form#addLicenseForm").addEventListener("submit", async (
 
   const update_data = {id: licenseId, price: parseFloat(licensePrice), name: licenseName, description: licenseDescription, duration: parseInt(licenseDuration), perpetual: perpetual, transfer_commission: parseFloat(licenseTransferFees), transferable: licenseTransferrable};
 
-  let result;
-  if (myIdentity === null) {
-    result = await licenseManager.update(update_data);
-  } else {
-    const agent = new HttpAgent({ identity: myIdentity });
-    await agent.fetchRootKey();
-    // Using the interface description of our webapp, we create an actor that we use to call the service methods.
-    const webapp = Actor.createActor(licenseAppIdl, {
-      agent,
-      canisterId: licenseAppId,
-    });
-    // Call update which adds the license as the current user.
-    result = await webapp.update(update_data);
-  }
+  // Call update which adds the license as the current user.
+  let result = await licenseManagerActor.update(update_data);
 
   // $loader.css("display", "none");
   loader.style.display = "none";
@@ -151,8 +148,6 @@ document.querySelector("form#addLicenseForm").addEventListener("submit", async (
 
   return false;
 });
-
-import { faker } from '@faker-js/faker';
 
 document.getElementById("addLicenseCompileDefaults").addEventListener("click", async (e) => {
   document.getElementById("inputLicenseId").value = cryptoRandomString({length: 5, type: "alphanumeric"});
@@ -196,6 +191,13 @@ async function refreshLicenseList(e) {
   generateTable();
 
   document.getElementById("elencoLicenze").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
+}
+
+async function refreshMyLicenseList(e) {
+  if(myIdentity === null)
+    return false;
+  elencoMieLicenze = await licenseManagerActor.getMetadataForUserDip721(await myIdentity.getPrincipal());
+  console.log(elencoMieLicenze);
 }
 
 document.querySelector("#searchLicense").addEventListener("change", async (e) => {
@@ -276,19 +278,12 @@ function callExternalServer(id, email, payerId) {
 
 const webapp_id = process.env.WHOAMI_CANISTER_ID;
 
-const licenseAppId = process.env.LICENSEMANAGER_CANISTER_ID;
+const licenseAppId = process.env.LICENSEMANAGER_CANISTER_ID;//can be imported from licenseManager
 
 // The interface of the whoami canister
 const webapp_idl = ({ IDL }) => {
   return IDL.Service({ whoami: IDL.Func([], [IDL.Principal], ["query"]) });
 };
-
-export const licenseAppIdl = ({ IDL }) => {
-  const update_record = {id: IDL.Text, price: IDL.Float64, name: IDL.Text, description: IDL.Text, duration: IDL.Nat64, perpetual: IDL.Bool, transfer_commission: IDL.Float64, transferable: IDL.Bool};
-  return IDL.Service({ update: IDL.Func([IDL.Record(update_record)], [IDL.Text], ["update"])});
-};
-
-let authClient;
 
 async function checkAuth() {
   // First we have to create and AuthClient.
@@ -325,6 +320,8 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     document.getElementById("loginBtn").innerText = "Login";
     document.getElementById("loginStatus").innerText = "";
     authClient.logout();
+    // su HttpAgent e non Actor licenseManagerActor.invalidateIdentity();
+    licenseManagerActor = licenseManager;
     return;
   }
 
@@ -350,7 +347,8 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   await setPrincipalUI(identity);
 });
 
-async function setPrincipalUI(identity) {
+//unused function
+async function whoami(identity) {
   // Using the identity obtained from the auth client, we can create an agent to interact with the IC.
   const agent = new HttpAgent({ identity });
   // Using the interface description of our webapp, we create an actor that we use to call the service methods.
@@ -359,12 +357,22 @@ async function setPrincipalUI(identity) {
     canisterId: webapp_id,
   });
   // Call whoami which returns the principal (user id) of the current user.
-  const principal = await webapp.whoami();
+  return await webapp.whoami();
+
+  // console.log(await licenseManager.get_my_principal());
+  // console.log(await licenseManagerActor.get_my_principal());
+}
+
+async function setPrincipalUI(identity) {
+  const principal = await identity.getPrincipal();
   // show the principal on the page
   document.getElementById("loginStatus").innerText = principal.toText();//.substring(0, 20);
   document.getElementById("loginBtn").innerText = "Logout";
   myIdentity = identity;
-  console.log(myIdentity);
+  console.log(myIdentity, principal.toString(), principal.toText());
+
+  // su HttpAgent e non Actor licenseManagerActor.replaceIdentity(myIdentity);
+  licenseManagerActor = licenseManagerCreateActor(licenseAppId, {agentOptions: {identity: myIdentity}});
 }
 
 let paypalInitialized = false;

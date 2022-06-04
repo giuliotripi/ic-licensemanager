@@ -162,7 +162,7 @@ service : {
     symbolDip721 : () -> (text) query;
     totalSupplyDip721 : () -> (nat64) query;
     getMetadataDip721 : (token_id : nat64) -> (MetadataResult) query;
-    getMetdataForUserDip721 : (user : principal) -> (vec ExtendedMetadataResult);
+    getMetadataForUserDip721 : (user : principal) -> (vec ExtendedMetadataResult);
     //safeTransferFromNotifyDip721 : (from : principal, to : principal, token_id : nat64, data : vec nat8) -> (TxReceipt);
     //transferFromNotifyDip721 : (from : principal, to : principal, token_id : nat64, data : vec nat8) -> (TxReceipt);
     approveDip721 : (user : principal, token_id : nat64) -> (TxReceipt);
