@@ -3,7 +3,7 @@
 extern crate ic_cdk_macros;
 extern crate serde;
 
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
@@ -18,9 +18,11 @@ use ic_certified_map::Hash;
 use include_base64::include_base64;
 
 use std::collections::BTreeMap;
+use std::fmt::Pointer;
 use std::fs::Metadata;
+use std::time::{Instant, SystemTime};
 use candid::pretty::str;
-use chrono::{Duration, NaiveDate};
+use chrono::{Datelike, Duration, Local, NaiveDate, NaiveDateTime, Utc};
 use ed25519_dalek::{PublicKey, Signature, SignatureError, Verifier};
 // use ic_cdk::export::Principal;
 use ic_cdk_macros::*;
@@ -31,8 +33,10 @@ use ic_cdk::{
         Principal,
     },
 };
+use serde::__private::de::IdentifierDeserializer;
 use serde::de::Unexpected::Str;
 use serde::Deserialize;
+use serde_cbor::value;
 
 mod http;
 
@@ -258,42 +262,6 @@ fn get_metadata_for_user(/* user: Principal */) /* -> Vec<ExtendedMetadataResult
     });
 }
 
-// ----------------------
-// notification interface
-// ----------------------
-/*
-#[update(name = "transferFromNotifyDip721")]
-fn transfer_from_notify(from: Principal, to: Principal, token_id: u64, data: Vec<u8>) -> Result {
-    let res = transfer_from(from, to, token_id)?;
-    if let Ok(arg) = Encode!(&api::caller(), &from, &token_id, &data) {
-        // Using call_raw ensures we don't need to await the future for the call to be executed.
-        // Calling an arbitrary function like this means that a malicious recipient could call
-        // transferFromNotifyDip721 in their onDIP721Received function, resulting in an infinite loop.
-        // This will trap eventually, but the transfer will have already been completed and the state-change persisted.
-        // That means the original transfer must reply before that happens, or the caller will be
-        // convinced that the transfer failed when it actually succeeded. So we don't await the call,
-        // so that we'll reply immediately regardless of how long the notification call takes.
-        let _ = api::call::call_raw(to, "onDIP721Received", &*arg, 0);
-    }
-    Ok(res)
-}
-
-
-#[update(name = "safeTransferFromNotifyDip721")]
-fn safe_transfer_from_notify(
-    from: Principal,
-    to: Principal,
-    token_id: u64,
-    data: Vec<u8>,
-) -> Result {
-    if to == MGMT {
-        Err(Error::ZeroAddress)
-    } else {
-        //transfer_from_notify(from, to, token_id, data)
-    }
-}
-*/
-
 // ------------------
 // approval interface
 // ------------------
@@ -435,6 +403,62 @@ fn name(token_id:u64) -> String {
     }
 }
 
+
+#[update]
+fn is_date_expired_nft(token_id:u64) -> bool {
+    let id_input = usize::try_from(token_id);
+    if id_input.is_err() {
+        return false;
+    }
+    let token_id = id_input.unwrap();
+
+    let nft = STATE.with(|state| {
+        let mut state = state.borrow_mut();
+        state
+            .nfts
+            .get(token_id).cloned()
+    });
+
+    if !nft.is_none() {
+        let nft1 = nft.unwrap();
+        let metadatapart = nft1.metadata.first();
+        if metadatapart.is_none() {
+            return false;
+        }
+        let metadata = metadatapart.unwrap();
+        let key_val = &metadata.key_val_data;
+        for (key, value) in key_val{
+            if key.eq("data_scadenza") {
+                //let data = metadata.key_val_data.get("data_scadenza").unwrap();
+                let val2 = value.clone();
+
+                let val_int:String = if let MetadataVal::TextContent(c) = val2 {
+                    c
+                }else{
+                    String::from("01-01-1900")
+                };
+
+                let data_nft = chrono::naive::NaiveDate::parse_from_str(val_int.as_str(), "%d-%m-%Y").unwrap();
+                if data_nft.year() != i32::from(1900) {
+
+                    let num_sec_from_ce =  (ic_cdk::api::time()/1000000000) as i64;
+                    let date_now = NaiveDateTime::from_timestamp(num_sec_from_ce, 0).date();
+
+                    if date_now > data_nft {
+                        burn(token_id as u64);
+                    } else {
+                        return false;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
 // --------------
 // burn interface
 // --------------
@@ -500,7 +524,7 @@ struct MintResult {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Eq, PartialEq)]
 enum MetadataVal {
     TextContent(String),
     BlobContent(Vec<u8>),
@@ -744,7 +768,8 @@ fn confirm_purchase(signature: String, purchase_info: PurchaseInformations) -> S
         //mint(ic_cdk::api::caller(), vec![], vec![]);
     }
 
-    let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");
+    let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%d-%m-%Y");
+    //let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");
 
     if date.is_err() {
         return String::from(purchase_info.date + " is not a valid date");
