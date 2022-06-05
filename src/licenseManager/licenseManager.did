@@ -11,8 +11,9 @@ type Licenza = record {
 
 type PurchaseInformations = record {
     licenseId: text;
-    price: nat64;
+    price: text;
     date: text;
+    to: text;
 };
 
 type OwnerResult = variant {

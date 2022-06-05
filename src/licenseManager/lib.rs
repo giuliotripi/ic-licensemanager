@@ -370,7 +370,6 @@ fn mint(
             metadata,
             //content: blob_content,
             name: name,
-
         };
         state.nfts.push(nft);
         Ok((state.next_txid(), new_id))
@@ -428,8 +427,8 @@ fn is_date_expired_nft(token_id:u64) -> bool {
         let metadata = metadatapart.unwrap();
         let key_val = &metadata.key_val_data;
         for (key, value) in key_val{
-            if key.eq("data_scadenza") {
-                //let data = metadata.key_val_data.get("data_scadenza").unwrap();
+            if key.eq("expire_date") {
+                //let data = metadata.key_val_data.get("expire_date").unwrap();
                 let val2 = value.clone();
 
                 let val_int:String = if let MetadataVal::TextContent(c) = val2 {
@@ -452,10 +451,11 @@ fn is_date_expired_nft(token_id:u64) -> bool {
                 }else{
                     return false;
                 }
+                return true;
             }
         }
     }
-    return true;
+    return false;
 }
 
 
@@ -638,8 +638,9 @@ struct License {
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 struct PurchaseInformations {
     pub license_id: String,
-    pub price: u64,
-    pub date: String
+    pub price: String,
+    pub date: String,
+    pub to: String
 }
 
 thread_local! {
@@ -748,8 +749,10 @@ fn confirm_purchase(signature: String, purchase_info: PurchaseInformations) -> S
     let orig_data = signature_to_orig_data(signature.clone());
     let info = purchase_info.clone();
     let mut struct_content = info.license_id.to_owned();
-    struct_content.push_str(format!("{:.2}", info.price).as_str());
+    // format!("{:.2}", info.price)
+    struct_content.push_str(info.price.as_str());
     struct_content.push_str(info.date.as_str());
+    struct_content.push_str(info.to.as_str());
 
     if ! orig_data.eq(struct_content.as_str()) {
         return format!("Signature contains {} but found {} in struct", orig_data, struct_content);
@@ -760,25 +763,47 @@ fn confirm_purchase(signature: String, purchase_info: PurchaseInformations) -> S
         Err(_) => {false}
     };
 
-
     if result == true {
+
+        let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%d-%m-%Y");
+        //let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");
+
+        if date.is_err() {
+            return String::from(purchase_info.date + " is not a valid date");
+        }
+
+        let date = date.unwrap();
+
+        let this_license = get(purchase_info.license_id.clone());
+        let license_price_str = format!("{:.2}", this_license.price);
+
+        if ! license_price_str.eq(purchase_info.price.as_str()) {
+            return format!("Expected {} as price but found {}", license_price_str, purchase_info.price.clone());
+        }
+
+        let date = date.checked_add_signed(Duration::days(this_license.duration as i64)).unwrap();
+
+        let date_str = date.format("%d-%m-%Y").to_string();
+
+
         //genero NFT
-        //let vettore_metadati = vec![];
-
-        //mint(ic_cdk::api::caller(), vec![], vec![]);
+        let principal = Principal::from_text(purchase_info.to).unwrap();
+        let mut info = Vec::new();
+        let mut metadata : HashMap<String, MetadataVal> = HashMap::new();
+        if this_license.duration != 0 {
+            metadata.insert(String::from("expire_date"), MetadataVal::TextContent(date_str));
+        }
+        metadata.insert(String::from("license_id"), MetadataVal::TextContent(purchase_info.license_id.clone()));
+        let metadatapart = MetadataPart{
+            purpose: MetadataPurpose::Preview,
+            key_val_data: metadata,
+            data: vec![]
+        };
+        info.push(metadatapart);
+        mint(purchase_info.license_id.clone(), principal, info);
+        return format!("The verification result for \"{}\" containing \"{}\" is {}, with id {} expires {}", signature, orig_data, result, purchase_info.license_id, date.format("%Y-%m-%d"))
     }
-
-    let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%d-%m-%Y");
-    //let date = chrono::naive::NaiveDate::parse_from_str(purchase_info.date.as_str(), "%Y-%m-%d");
-
-    if date.is_err() {
-        return String::from(purchase_info.date + " is not a valid date");
-    }
-
-    let date = date.unwrap();
-
-    let date = date.checked_add_signed(Duration::days(10)).unwrap();
-    format!("The verification result for \"{}\" containing \"{}\" is {}, with id {} expires {}", signature, orig_data, result, purchase_info.license_id, date.format("%Y-%m-%d"))
+    return format!("The verification result for \"{}\" containing \"{}\" is {}, with id {}", signature, orig_data, result, purchase_info.license_id)
 }
 //https://docs.rs/ed25519-dalek/latest/ed25519_dalek/
 //https://docs.rs/ed25519/latest/ed25519/

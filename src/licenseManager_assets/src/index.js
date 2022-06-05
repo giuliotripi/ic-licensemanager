@@ -94,8 +94,8 @@ async function difficultPathName(sectionName) {
   } else if(path.length === 2) {
     if(path[0] === "buy") {
       $("#buyButton").addClass("active");
-      await showDetailBuyPage(path[1]);
       document.getElementById("buy").style.display = "inherit";
+      await showDetailBuyPage(path[1]);
     } else if(path[0] === "licenses") {
 
     }
@@ -252,6 +252,7 @@ async function showDetailBuyPage(licenseId) {
 
   if(!paypalInitialized)
     initPaypal();
+  document.getElementById("paypal-button-container").style.display = "";
 }
 
 // document.getElementById("cancelCheckout").addEventListener("click", cancelCheckout);
@@ -261,16 +262,18 @@ async function cancelCheckout() {
   $("#checkout").css("display", "none");
 }
 
-function callExternalServer(id, email, payerId) {
+async function callExternalServer(id, email, payerId) {
   //https://axios-http.com/docs/post_example
-  axios.get(baseUrl + "/check", {params: {id, referenceId, amount, customId, email, payerId}}).then(function (response) {
+  let to = (await myIdentity.getPrincipal()).toText();
+  axios.get(baseUrl + "/check", {params: {id, referenceId, amount, customId, email, payerId, to}}).then(function (response) {
     console.log(response.data);
     if(response.data.ok) {
       console.log("Transazione conclusa con successo");
+      alert("Transazione conclusa con successo");
     } else {
       alert("Transazione fallita: " + response.data.message);
+      document.getElementById("paypal-button-container").style.display = "";
     }
-    document.getElementById("paypal-button-container").style.visibility = "visible";
   }).catch(function (response) {
 
   });
@@ -401,6 +404,10 @@ function initPaypal() {
               alert("License not found");
               return;
             }
+            if(myIdentity === null) {
+              alert("You must login to buy");
+              return;
+            }
             const name = license.name;
             referenceId = license.id;
             amount = parseFloat(license.price);
@@ -419,14 +426,14 @@ function initPaypal() {
               }]
             });
           },
-          onApprove: function (data, actions) {
+          onApprove: async function (data, actions) {
             // This function captures the funds from the transaction.
-            return actions.order.capture().then(function (details) {
+            return actions.order.capture().then(async function (details) {
               // This function shows a transaction success message to your buyer.
               console.log('Transaction completed by ' + details.payer.name.given_name);
-              callExternalServer(details.id, details.payer.email_address, details.payer.payer_id);
+              await callExternalServer(details.id, details.payer.email_address, details.payer.payer_id);
               console.log(details);
-              document.getElementById("paypal-button-container").style.visibility = "hidden";
+              document.getElementById("paypal-button-container").style.display = "none";
             });
           }
         }).render('#paypal-button-container');
