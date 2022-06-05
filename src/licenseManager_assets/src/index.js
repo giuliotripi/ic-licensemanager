@@ -3,6 +3,7 @@ import cryptoRandomString from 'crypto-random-string';
 import {loadScript} from "@paypal/paypal-js";
 import {Actor, HttpAgent} from "@dfinity/agent";
 import {AuthClient, LocalStorage} from "@dfinity/auth-client";
+import {Principal} from "@dfinity/principal";
 import {faker} from '@faker-js/faker';
 
 const axios = require("axios");
@@ -14,6 +15,7 @@ let referenceId, amount, customId;
 let elencoLicenze, elencoMieLicenze;
 
 let lastLicenseListRefresh = 0;
+let lastMyLicenseListRefresh = 0;
 
 let myIdentity = null;
 
@@ -97,7 +99,9 @@ async function difficultPathName(sectionName) {
       document.getElementById("buy").style.display = "inherit";
       await showDetailBuyPage(path[1]);
     } else if(path[0] === "licenses") {
-
+      document.getElementById("singleLicense").style.display = "inherit";
+      $("#licensesButton").addClass("active");
+      await displayMySingleLicense(path[1]);
     }
   } else {
     showNotFound();
@@ -109,6 +113,10 @@ function showNotFound(message) {
   document.getElementById("notFound").style.display = "inherit";
   $("#description404").text(message + "Ref: " + window.location.hash);
 }
+
+document.querySelector("#licensesButton a").addEventListener("click", async (e) => {
+  lastMyLicenseListRefresh = 0;
+});
 
 //aggiunge una licenza all'elenco degli elementi acquistabili
 document.querySelector("form#addLicenseForm").addEventListener("submit", async (e) => {
@@ -190,14 +198,105 @@ async function refreshLicenseList(e) {
 
   generateTable();
 
-  document.getElementById("elencoLicenze").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
+  document.getElementById("searchAndListLicenses").style.visibility = elencoLicenze.length > 0 ? "visible" : "hidden";
+  document.querySelector("#buy .empty").style.display = elencoLicenze.length === 0 ? "" : "none";
 }
 
 async function refreshMyLicenseList(e) {
-  if(myIdentity === null)
+  let $needLogin = $("#licenses .needLogin");
+  if(myIdentity === null) {
+    $needLogin.css("display", "");
+    $("#myLicenses").css("display", "none");
     return false;
-  elencoMieLicenze = await licenseManagerActor.getMetadataForUserDip721(await myIdentity.getPrincipal());
-  console.log(elencoMieLicenze);
+  }
+  $("#licenses .loadingIcon").css("display", "inline-block");
+
+  $needLogin.css("display", "none");
+  $("#myLicenses").css("display", "");
+
+  if(lastMyLicenseListRefresh === 0) {
+    elencoMieLicenze = await licenseManagerActor.getMetadataForUserDip721(await myIdentity.getPrincipal());
+
+    lastMyLicenseListRefresh = Date.now();
+
+    await refreshLicenseList();
+    console.log(elencoMieLicenze);
+  }
+  generateTableMyLicenses();
+
+  $("#licenses .loadingIcon").css("display", "none");
+}
+
+function generateTableMyLicenses() {
+  let finalHtml = "";
+  elencoMieLicenze.slice(0, 1000).forEach(
+      myLicense => {
+        let metadata = getNftMetadata(myLicense);
+        console.log(metadata);
+        let licenza = elencoLicenze.find(el => el.id === metadata["license_id"]);
+        let expiration = "/";
+        if(metadata["expire_date"] !== undefined)
+          expiration = metadata["expire_date"];
+        finalHtml += "<tr><td>" + licenza.id + "</td><td>" + licenza.name + "</td><td>" + licenza.price + "€</td><td>" + expiration + "</td>" +
+          "<td><a href='#licenses/" + myLicense.token_id + "'>View details</a></td></tr>\n"}
+  );
+
+  document.querySelector("#myLicenses > tbody").innerHTML = finalHtml;
+}
+
+function getNftMetadata(nft) {
+  let result = {}
+  nft.metadata_desc[0].key_val_data.forEach(el => {
+    result[el[0]] = el[1].TextContent;
+  });
+  return result;
+}
+
+async function displayMySingleLicense(tokenId) {
+  let $needLogin = $("#singleLicense .needLogin");
+  if(myIdentity === null) {
+    $needLogin.css("display", "");
+    $("#myLicenseDetails").css("display", "none");
+    return false;
+  }
+  $needLogin.css("display", "none");
+  $("#myLicenseDetails").css("display", "");
+
+  $("#singleLicense .loadingIcon").css("display", "inline-block");
+
+  if(lastMyLicenseListRefresh === 0)
+    await refreshMyLicenseList();
+
+  let myLicense = elencoMieLicenze.find(l => l.token_id === BigInt(tokenId));
+
+  if(myLicense === undefined)
+    return showNotFound("Token ID not valid. ");
+
+  let metadata = getNftMetadata(myLicense);
+
+  let license = elencoLicenze.find(l => l.id === metadata["license_id"]);
+
+  if(license === undefined)
+    return showNotFound("License ID not valid. ");
+
+  let duration = (parseInt(license.duration) === 0) ? "unlimited" : license.duration + " days";
+
+  let expire_date = (metadata["expire_date"] === undefined) ? "/" : metadata["expire_date"];
+
+  console.log(metadata, expire_date);
+
+  let finalHtml = "";
+  finalHtml += `<tr><td>ID</td><td>${license.id}</td></tr>`;
+  finalHtml += `<tr><td>Name</td><td>${license.name}</td></tr>`;
+  finalHtml += `<tr><td>Price</td><td>${license.price}</td></tr>`;
+  finalHtml += `<tr><td>Description</td><td>${license.description}</td></tr>`;
+  finalHtml += `<tr><td>Transferable</td><td>${license.transferable}</td></tr>`;
+  finalHtml += `<tr><td>Transfer commission</td><td>${license.transfer_commission}</td></tr>`;
+  finalHtml += `<tr><td>Duration</td><td>${duration}</td></tr>`;
+  finalHtml += `<tr><td>Expire date</td><td>${expire_date}</td></tr>`;
+  $("#myLicenseDetails").html(finalHtml);
+
+  $("#singleLicense .loadingIcon").css("display", "none");
 }
 
 document.querySelector("#searchLicense").addEventListener("change", async (e) => {
@@ -219,6 +318,37 @@ function generateTable() {
 
   document.querySelector("#elencoLicenze > tbody").innerHTML = finalHtml;
 }
+
+$("#transferButton").on("click", async (e) => {
+  let recipient = $("#inputTransferTo").val();
+  if(recipient.length < 10) {
+    return alert("Recipient not valid");
+  }
+  let other = null;
+  try {
+    other = Principal.fromText(recipient);
+  } catch (e) {
+    console.log(e);
+    return alert("Recipient not valid 2");
+  }
+  if(!confirm("Are you sure? You can't go back!")) {
+    return alert("Operation canceled");
+  }
+  $("#singleLicense .loadingIcon2").css("display", "inline-block");
+
+  let result = null;
+  try {
+    let principal = await myIdentity.getPrincipal();
+    result = await licenseManagerActor.transferFromDip721(principal, other, BigInt(location.hash.split("/")[1]));
+    console.log(result);
+    lastMyLicenseListRefresh = 0;
+    alert("Transfer successful");
+  } catch (e) {
+    console.log(e);
+    alert("Error during transfer");
+  }
+  $("#singleLicense .loadingIcon2").css("display", "none");
+});
 
 $("#elencoLicenze").on("click", ".buyElement",async function (e) {
   let licenseId = e.target.getAttribute("data-license-id");
@@ -325,6 +455,10 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     authClient.logout();
     // su HttpAgent e non Actor licenseManagerActor.invalidateIdentity();
     licenseManagerActor = licenseManager;
+
+    //reset variables related to principal
+    lastMyLicenseListRefresh = 0;
+    elencoMieLicenze = [];
     return;
   }
 

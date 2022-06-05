@@ -19,13 +19,16 @@
   <link href="sticky-footer-navbar.css" rel="stylesheet">
 
   <style>
-    main.container, .loadingIcon {
+    main.container, .loadingIcon, .loadingIcon2 {
       display: none;
     }
     .buyElement {
       cursor: pointer;
       color: blue;
       text-decoration: underline;
+    }
+    h1 .loadingIcon {
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -83,13 +86,16 @@
 </main>
 
 <main role="main" class="container" id="licenses">
-  <h1 class="mt-5">My licenses</h1>
+  <h1 class="mt-5">My licenses <span class="spinner-border loadingIcon" role="status" aria-hidden="true"></span></h1>
   <p class="lead">Here you can see all the licenses that you bought</p>
+  <p style="font-size: 2em" class="needLogin">To view this page you must login first</p>
   <table id="myLicenses" class="table table-striped">
     <thead>
       <tr>
         <th scope="col">#</th>
         <th scope="col">Name</th>
+        <th scope="col">Price</th>
+        <th scope="col">Expire date</th>
         <th scope="col">Actions</th>
       </tr>
     </thead>
@@ -99,9 +105,34 @@
   </table>
 </main>
 
+<main role="main" class="container" id="singleLicense">
+  <h1 class="mt-5">My license <span class="spinner-border loadingIcon" role="status" aria-hidden="true"></span></h1>
+  <p class="lead">Here are the details of your license</p>
+  <p style="font-size: 2em" class="needLogin">To view this page you must login first</p>
+  <table id="myLicenseDetails" class="table table-striped">
+
+  </table>
+  <label for="inputTransferTo">Transfer this license to</label>
+  <div class="row" style="margin-bottom: 15px">
+    <div class="col-sm">
+      <input type="text" class="form-control" id="inputTransferTo" placeholder="Enter the principal of the recipient" required>
+    </div>
+    <div class="col-sm">
+      <button type="submit" class="btn btn-warning" id="transferButton">
+        <span class="spinner-border spinner-border-sm loadingIcon2" role="status" aria-hidden="true"></span>
+        Transfer
+      </button>
+    </div>
+  </div>
+  <a href="#licenses">
+    <button type="button" class="btn btn-primary">Back</button>
+  </a>
+</main>
+
 <main role="main" class="container" id="buy">
   <h1 class="mt-5">Buy</h1>
   <p class="lead">Here you can see a list of all the available licenses and buy one of them.</p>
+  <p class="empty" style="font-size: 2em">There are no licenses registered in the system</p>
   <!-- TODO: add pagination -->
   <div id="searchAndListLicenses">
     <label for="searchLicense">Search for a license name</label>
