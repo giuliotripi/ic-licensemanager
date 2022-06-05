@@ -3,26 +3,21 @@
 extern crate ic_cdk_macros;
 extern crate serde;
 
-use std::borrow::{Borrow, Cow};
+use std::borrow::{Cow};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
-use std::iter::FromIterator;
 use std::mem;
 use std::num::TryFromIntError;
 use std::result::Result as StdResult;
 
 //use candid::{CandidType, Encode, Principal};
-use ic_cdk::{api::{self, call}, print, storage};
+use ic_cdk::{api::{self, call}, storage};
 use ic_certified_map::Hash;
 use include_base64::include_base64;
 
 use std::collections::BTreeMap;
-use std::fmt::Pointer;
-use std::fs::Metadata;
-use std::time::{Instant, SystemTime};
-use candid::pretty::str;
-use chrono::{Datelike, Duration, Local, NaiveDate, NaiveDateTime, Utc};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime};
 use ed25519_dalek::{PublicKey, Signature, SignatureError, Verifier};
 // use ic_cdk::export::Principal;
 use ic_cdk_macros::*;
@@ -33,10 +28,7 @@ use ic_cdk::{
         Principal,
     },
 };
-use serde::__private::de::IdentifierDeserializer;
-use serde::de::Unexpected::Str;
 use serde::Deserialize;
-use serde_cbor::value;
 
 mod http;
 
