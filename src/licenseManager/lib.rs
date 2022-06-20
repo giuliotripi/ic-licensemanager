@@ -2,6 +2,7 @@
 
 extern crate ic_cdk_macros;
 extern crate serde;
+extern crate ic_cron;
 
 use std::borrow::{Cow};
 use std::cell::RefCell;
@@ -28,14 +29,63 @@ use ic_cdk::{
         Principal,
     },
 };
+use ic_cron::types::Iterations;
+//use serde::__private::de::Content::String;
 use serde::Deserialize;
 
 mod http;
+
+ic_cron::implement_cron!();
 
 const MGMT: Principal = Principal::from_slice(&[]);
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::default();
+}
+
+#[derive(CandidType, Deserialize)]
+enum TaskKind {
+    CheckNfts,
+}
+
+// enqueue a task
+#[ic_cdk_macros::update]
+fn cron_check_data_nfts() {
+    ic_cdk::print("Start cron_check_data_nfts");
+    cron_enqueue(
+        // set a task payload - any CandidType is supported
+        TaskKind::CheckNfts,
+        // set a scheduling interval (how often and how many times to execute)
+        ic_cron::types::SchedulingOptions {
+            delay_nano: 1_000_000_000 * 60 * 2, // start after 2 minutes
+            interval_nano: 1_000_000_000 * 60 * 60 * 24, // each day
+            iterations: Iterations::Infinite, // infinite
+        },
+    );
+}
+
+#[heartbeat]
+fn bumbum() {
+    for task in cron_ready_tasks() {
+        let kind = task
+            .get_payload::<TaskKind>()
+            .expect("Unable to deserialize cron task kind");
+
+        match kind {
+            TaskKind::CheckNfts => {
+                let nfts = STATE.with(|state| {
+                    let mut state = state.borrow();
+                    state.nfts.clone()
+                });
+
+                ic_cdk::print("Start checking date of nfts...");
+                for token_id in 0..nfts.len() {
+                    is_date_expired_nft(token_id as u64);
+                }
+                ic_cdk::print("--> terminate checking date of nfts <--");
+            }
+        }
+    }
 }
 
 #[derive(CandidType, Deserialize)]
@@ -71,9 +121,11 @@ struct InitArgs {
     symbol: String,
 }
 
-/*
+
 #[init]
-fn init(args: InitArgs) {
+fn init() {
+    cron_check_data_nfts();
+    /*
     STATE.with(|state| {
         let mut state = state.borrow_mut();
         state.custodians = args
@@ -83,7 +135,8 @@ fn init(args: InitArgs) {
         state.symbol = args.symbol;
         state.logo = args.logo;
     });
-}*/
+     */
+}
 
 #[derive(CandidType, Deserialize)]
 enum Error {
@@ -395,7 +448,22 @@ fn name(token_id:u64) -> String {
 }
 
 
-#[update]
+#[update(name="CheckNfts")]
+fn check_nfts() -> () {
+    let nfts = STATE.with(|state| {
+        let mut state = state.borrow();
+        state.nfts.clone()
+    });
+
+    ic_cdk::print("Start checking date of nfts...");
+    for token_id in 0..nfts.len() {
+        is_date_expired_nft(token_id as u64);
+    }
+    ic_cdk::print("--> terminate checking date of nfts <--");
+}
+
+
+#[update(name="checkDataExpiredNft")]
 fn is_date_expired_nft(token_id:u64) -> bool {
     let id_input = usize::try_from(token_id);
     if id_input.is_err() {
@@ -412,40 +480,48 @@ fn is_date_expired_nft(token_id:u64) -> bool {
 
     if !nft.is_none() {
         let nft1 = nft.unwrap();
-        let metadatapart = nft1.metadata.first();
-        if metadatapart.is_none() {
-            return false;
-        }
-        let metadata = metadatapart.unwrap();
-        let key_val = &metadata.key_val_data;
-        for (key, value) in key_val{
-            if key.eq("expire_date") {
-                //let data = metadata.key_val_data.get("expire_date").unwrap();
-                let val2 = value.clone();
 
-                let val_int:String = if let MetadataVal::TextContent(c) = val2 {
-                    c
-                }else{
-                    String::from("01-01-1900")
-                };
+        if nft1.owner!=MGMT {
+            let metadatapart = nft1.metadata.first();
+            if metadatapart.is_none() {
+                return false;
+            }
+            let metadata = metadatapart.unwrap();
+            let key_val = &metadata.key_val_data;
+            for (key, value) in key_val {
+                if key.eq("expire_date") {
+                    //let data = metadata.key_val_data.get("expire_date").unwrap();
+                    let val2 = value.clone();
 
-                let data_nft = chrono::naive::NaiveDate::parse_from_str(val_int.as_str(), "%d-%m-%Y").unwrap();
-                if data_nft.year() != i32::from(1900) {
+                    let val_int: String = if let MetadataVal::TextContent(c) = val2 {
+                        c
+                    } else {
+                        String::from("01-01-1900")
+                    };
 
-                    let num_sec_from_ce =  (ic_cdk::api::time()/1000000000) as i64;
-                    let date_now = NaiveDateTime::from_timestamp(num_sec_from_ce, 0).date();
+                    let data_nft = chrono::naive::NaiveDate::parse_from_str(val_int.as_str(), "%d-%m-%Y").unwrap();
+                    if data_nft.year() != i32::from(1900) {
+                        let num_sec_from_ce = (ic_cdk::api::time() / 1000000000) as i64;
+                        let date_now = NaiveDateTime::from_timestamp(num_sec_from_ce, 0).date();
 
-                    if date_now > data_nft {
-                        burn(token_id as u64);
+                        ic_cdk::print("Today:");
+                        ic_cdk::print(date_now.to_string());
+                        ic_cdk::print("ndt's date:");
+                        ic_cdk::print(data_nft.to_string());
+
+                        if date_now > data_nft {
+                            burn(token_id as u64);
+                        } else {
+                            return false;
+                        }
                     } else {
                         return false;
                     }
-                }else{
-                    return false;
+                    return true;
                 }
-                return true;
             }
         }
+        return false;
     }
     return false;
 }
