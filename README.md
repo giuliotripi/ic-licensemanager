@@ -2,6 +2,8 @@
 
 This is an example project for Blockchain and cryptocurrencies exam @ University of Bologna.
 
+Should be a Single Page application
+
 ## Authentication
 
 In order to test the authentication with Internet Identity you either need a physical FIDO key, or
@@ -27,6 +29,16 @@ https://internetcomputer.org/docs/current/developer-docs/functionality/internet-
 https://github.com/dfinity/internet-identity/blob/main/docs/internet-identity-spec.adoc#client-auth-protocol docs of II
 https://github.com/dfinity/internet-identity/blob/main/docs/internet-identity-spec.adoc#deploying-on-testnets not so clear
 
+https://erxue-5aaaa-aaaab-qaagq-cai.raw.ic0.app/agent/modules.html
+https://erxue-5aaaa-aaaab-qaagq-cai.raw.ic0.app/auth-client/index.html
+https://erxue-5aaaa-aaaab-qaagq-cai.ic0.app/identity/index.html
+https://erxue-5aaaa-aaaab-qaagq-cai.ic0.app/principal/index.html
+
+
+
+https://getbootstrap.com/docs/4.0/components/forms/#how-it-works
+https://stackoverflow.com/questions/50658125/how-to-get-the-child-of-a-element-with-event-target
+https://getbootstrap.com/docs/4.0/components/buttons/
 
 ## Run II in local
 
@@ -59,18 +71,15 @@ This way you can test it in your local PC using localhost as host.
 
 ## Summary
 
-This example demonstrates a dead simple dapp consisting of two canister smart contracts:
+This example demonstrates a dapp consisting of two canister smart contracts:
 
-* a simple backend canister, `hello`, implementing the logic of the application in Rust, and
-* a simple frontend asset canister, `hello_assets` serving the assets of the dapp's web user interface.
+* a simple backend canister, `licenseManager`, implementing the logic of the application in Rust, and
+* a simple frontend asset canister, `licenseManager_assets` serving the assets of the dapp's web user interface.
 
 This example is based on the default project created by running
 `dfx new --type=rust hello` as described more fully
 [here](https://smartcontracts.org/docs/rust-guide/rust-quickstart.html).
 
-### Motoko variant
-
-A version of this example with a Motoko implementation of canister `hello` can be found [here](../../motoko/hello/README.md).
 
 ## Interface
 
@@ -78,20 +87,14 @@ Canister `licenseManager` is defined as a Rust library:
 
 * [src/licenseManager/lib.rs](src/licenseManager/lib.rs)
 
-with the Candid interface:
+with the Candid interface specified in [src/licenseManager/licenseManager.did](src/licenseManager/licenseManager.did)
 
-```
-service : {
-  greet: (text) -> (text);
-}
-```
-
-The frontend displays a page with an HTML text box for the argument and a button for calling the function greet with that argument. The result of the call is displayed in a message box.
+The frontend displays a page with in HTML.
 
 The relevant frontend code is:
 
 * [src/licenseManager_assets/src/index.html](src/licenseManager_assets/src/index.html)
-* [src/licenseManager_assets/src/index.jsx](src/licenseManager_assets/src/index.jsx)
+* [src/licenseManager_assets/src/index.jsx](src/licenseManager_assets/src/index.js)
 
 
 ## Requirements
@@ -136,31 +139,48 @@ Using two terminal windows, do the following steps:
 
 1. Call the hello canister's greet function:
 
-   ```text
-   dfx canister call hello greet '("everyone")'
+   ```bash
+   YOU=$(dfx identity get-principal)
+   
+   dfx canister call licenseManager mintDip721 \
+    "(\"Seconda licenza\",principal\"$YOU\",vec{record{
+        purpose=variant{Rendered};
+        data=blob\"Seconda Licenza\";
+        key_val_data=vec{
+            record{
+                \"contentType\";
+                variant{TextContent=\"text/plain\"};
+            };
+            record{
+                \"locationType\";
+                variant{Nat8Content=4:nat8}
+            };
+            record{
+                \"expire_date\";
+                variant{TextContent=\"01-06-2022\"}
+            };
+        }
+    }})"
+   
+   dfx canister call licenseManager CheckNfts '(0)'
    ```
 
-1. Observe the following result.
+1. Observe the result.
+
+
+The previous steps use `dfx` to directly call the function on the `licenseManager` (backend) canister.
+
+To access the web user interface of the dapp, that is served by canister `licenseManager_assets`, do the following:
+
+1. Determine the URL of the `licenseManager_assets` asset canister.
 
    ```text
-   ("Hello,a everyone!")
-   ```
-
-The previous steps use `dfx` to directly call the function on the `hello` (backend) canister.
-
-To access the web user interface of the dapp, that is served by canister `hello_assets`, do the following:
-
-1. Determine the URL of the `hello_assets` asset canister.
-
-   ```text
-   echo "http://localhost:8000/?canisterId=$(dfx canister id hello_assets)"
+   echo "http://localhost:8000/?canisterId=$(dfx canister id licenseManager_assets)"
    ```
 
 1. Navigate to the URL in your browser.
 
-2. The browser should display a simple HTML page with a sample asset image file, an input field, and a button.
-
-3. Enter the text `everyone` and click the button to see the greeting returned by the backend `hello` canister.
+2. The browser should display HTML page with a single page application.
 
 ## Troubleshooting
 
