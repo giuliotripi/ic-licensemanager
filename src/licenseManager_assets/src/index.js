@@ -472,7 +472,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   // We can either use the callback functions directly or wrap in a promise.
   await new Promise((resolve, reject) => {
     authClient.login({
-      identityProvider: "http://localhost:8000/?canisterId=qoctq-giaaa-aaaaa-aaaea-cai",
+      identityProvider: "http://localhost:8000/?canisterId=renrk-eyaaa-aaaaa-aaada-cai",
       onSuccess: resolve,
       onError: reject,
     });

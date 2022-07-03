@@ -56,7 +56,7 @@ def send_ok_canister(customId: str, referenceId: str, amount, to: str):
 	print(signature)
 
 	# name = agent.query_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([{"type": Types.Text, "value": "ciao"}]))
-	name = agent.update_raw("rrkah-fqaaa-aaaaa-aaaaq-cai", "confirm_purchase", encode([
+	name = agent.update_raw("rwlgt-iiaaa-aaaaa-aaaaa-cai", "confirm_purchase", encode([
 		{"type": Types.Text, "value": signature},
 		{"type": Types.Record(
 			{"license_id": Types.Text, "price": Types.Text, "date": Types.Text, "to": Types.Text}),
