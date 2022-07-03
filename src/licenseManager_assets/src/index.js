@@ -297,6 +297,9 @@ async function displayMySingleLicense(tokenId) {
   $("#myLicenseDetails").html(finalHtml);
 
   $("#singleLicense .loadingIcon").css("display", "none");
+
+  $("#inputTransferTo").attr("disabled", !license.transferable);
+  $("#transferButton").attr("disabled", !license.transferable);
 }
 
 document.querySelector("#searchLicense").addEventListener("change", async (e) => {
@@ -482,6 +485,8 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   const identity = authClient.getIdentity();
 
   await setPrincipalUI(identity);
+
+  await displaySection(window.location.hash);
 });
 
 //unused function
