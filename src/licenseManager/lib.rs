@@ -781,10 +781,6 @@ fn update(license: License) -> String {
     principal_id.to_text()
 }
 
-#[ic_cdk_macros::query]
-fn greet(name: String) -> String {
-    format!("Hello {}!", name)
-}
 
 #[ic_cdk_macros::query]
 fn list_products() -> Vec<License> {
@@ -797,19 +793,10 @@ fn list_products() -> Vec<License> {
     })
 }
 
-#[ic_cdk_macros::update]
-fn update_product(name: String) -> String {
-    format!("Hello {}!", name)
-}
-
-#[ic_cdk_macros::update]
-fn add_product(name: String) -> String {
-    format!("Hello {}!", name)
-}
-
-#[ic_cdk_macros::update]
-fn delete_product(name: String) -> String {
-    format!("Hello {}!", name)
+#[query]
+fn get_my_principal() -> String {
+    let principal_id = ic_cdk::api::caller();
+    return principal_id.to_text();
 }
 
 #[ic_cdk_macros::update]

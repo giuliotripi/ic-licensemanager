@@ -144,15 +144,12 @@ type HttpResponse = record {
 };
 
 service : {
-    "greet": (text) -> (text) query;
     "confirm_purchase": (text, PurchaseInformations) -> (text);
     "list_products": () -> (vec Licenza) query;
-    "update_product": (text) -> (text);
     "update": (Licenza) -> (text);
     "get": (text) -> (Licenza);
     "get_single": (text) -> (Licenza);
-    "add_product": (text) -> (text);
-    "delete_product": (text) -> (text);
+    "get_my_principal": () -> (text);
     balanceOfDip721 : (user : principal) -> (nat64) query;
     ownerOfDip721 : (token_id : nat64) -> (OwnerResult) query;
     safeTransferFromDip721 : (from : principal, to : principal, token_id : nat64) -> (TxReceipt);
